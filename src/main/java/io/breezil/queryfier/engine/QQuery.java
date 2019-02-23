@@ -12,15 +12,15 @@ import org.hibernate.transform.Transformers;
 
 public class QQuery {
 	private String from;
-	private final List<QSelection> projections;
-	private final List<String> selections;
+	private final List<QProjection> projections;
+    private final List<QSelection> selections;
 	private final Map<String, Object> parameters;
     private String entity;
     private String alias;
 
 	public QQuery() {
-		this.projections = new ArrayList<QSelection>();
-		this.selections = new ArrayList<String>();
+		this.projections = new ArrayList<QProjection>();
+        this.selections = new ArrayList<QSelection>();
 		this.parameters = new HashMap<String, Object>();
 	}
     
@@ -59,8 +59,11 @@ public class QQuery {
 		b.append("\n");
 		b.append("WHERE 1=1 ");
 		b.append("\n");
-		for (String s : this.selections) {
-			b.append(s);
+        for (QSelection s : this.selections) {
+            b.append(" AND ");
+            b.append(s.getColumn());
+            b.append(" = ");
+            b.append(s.getAlias());
 			b.append("\n");
 		}
 		b.append("\n");
@@ -73,7 +76,7 @@ public class QQuery {
 		b.append("\n");
 		b.append("Projections");
 		b.append("\n");
-		for (QSelection p : this.projections) {
+		for (QProjection p : this.projections) {
 			b.append(p.toString());
 			b.append("\n");
 		}
@@ -85,7 +88,7 @@ public class QQuery {
 		this.parameters.put(name, value);
 	}
 
-	public void addProjection(QSelection proj) {
+	public void addProjection(QProjection proj) {
 		this.projections.add(proj);
 	}
     

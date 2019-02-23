@@ -1,30 +1,24 @@
 package io.breezil.queryfier.engine;
 
 public class QSelection {
-	private String name;
-	private String alias;
-	
-	public QSelection(String name, String alias) {
-		this.name = name;
-		this.alias = alias;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getAlias() {
-		return alias;
-	}
-	public void setAlias(String alias) {
-		this.alias = alias;
-	}
-	
-	@Override
-	public String toString() {
-		return this.name + " " + this.alias; 
-	}
-
+    private String column;
+    private String value;
+    private String operation;
+    
+    public String getColumn() {
+        return this.column;
+    }
+    
+    public void setColumn(String column) {
+        this.column = column;
+    }
+    
+    public String getOperation() {
+        return this.operation;
+    }
+    
+    public void setOperation(String operation) {
+        this.operation = operation;
+    }
+    
 }

@@ -33,7 +33,7 @@ public class QueryBuilder {
 		for (String columnsAlias : toParse.getColumns()) {
             System.out.println(columnsAlias);
 			String actualColumns = projections.get(columnsAlias);
-            q.addProjection(new QSelection(actualColumns, columnsAlias));
+            q.addProjection(new QProjection(actualColumns, columnsAlias));
 		}
 		
 		return q;
