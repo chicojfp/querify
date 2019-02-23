@@ -10,46 +10,65 @@ import io.breezil.queryfier.engine.annotations.QField;
 public class QueryBuilder {
 	
 	public QQuery parseQuery(QBase toParse) throws IllegalArgumentException, IllegalAccessException {
-		if (toParse == null)
-			return  null;
+		if (toParse == null) {
+            return  null;
+        }
 		
 		QQuery q = new QQuery();
-		String alias = "";
-		Class<? extends Object> c = toParse.getClass();
-		if (c.isAnnotationPresent(QEntity.class)) {
-			QEntity n = (QEntity) c.getAnnotation(QEntity.class);
-			alias = getAlias(n);
-			q.setFrom(n.name() + " " + alias );
-		}
+		Class<? extends Object> classToParse = toParse.getClass();
+		configureAlias(q, classToParse);
 		
 		Map<String, String> projections = new HashMap<String, String>();
-		for(Field f : c.getDeclaredFields()) {
+		for(Field f : classToParse.getDeclaredFields()) {
 			f.setAccessible(true);
-			System.out.println();
-			Object fValue = f.get(toParse); 
-			if (fValue != null) {
-				String equality = getFieldName(f);
-				String selection = String.format(" AND %s.%s :%s", alias, equality, f.getName());
+			Object fieldValue = f.get(toParse);
+			if (fieldValue != null) {
+                String selection = createSelection(q, f);
 				q.addSelection(selection);
-				q.addParameter(f.getName(), fValue);
+				q.addParameter(f.getName(), fieldValue);
 			}
-			projections.put(getFieldName(f), alias);
-//			q.addProjection(new QSelection(getFieldName(f), alias));
+            projections.put(f.getName(), getFieldName(f));
 		}
 		
-		for (String p : toParse.getColumns()) {
-			String a = projections.get(p);
-			q.addProjection(new QSelection(p, a));
+		for (String columnsAlias : toParse.getColumns()) {
+            System.out.println(columnsAlias);
+			String actualColumns = projections.get(columnsAlias);
+            q.addProjection(new QSelection(actualColumns, columnsAlias));
 		}
 		
 		return q;
 	}
 
+    private String createSelection(QQuery q, Field f) {
+        String equality = getExpression(f);
+        String fieldName = getFieldName(f);
+        String selection = String.format(" AND %s.%s %s :%s", q.getAlias(), fieldName, equality, f.getName());
+        return selection;
+    }
+
+    private void configureAlias(QQuery q, Class<? extends Object> classToParse) {
+        if (classToParse.isAnnotationPresent(QEntity.class)) {
+			QEntity n = classToParse.getAnnotation(QEntity.class);
+            q.setAlias(getAlias(n));
+            q.setEntity(n.name());
+		}
+    }
+
 	private String getFieldName(Field f) {
-		QField q = (QField) f.getAnnotation(QField.class);
-		if (q == null) return f.getName() + " = ";
-		return q.name() + " " + q.comparator() + " ";
-	}
+        QField q = f.getAnnotation(QField.class);
+        if (q == null) {
+            return f.getName();
+        }
+        return q.name();
+    }
+    
+    private String getExpression(Field f) {
+        QField q = f.getAnnotation(QField.class);
+        if (q == null) {
+            return " = ";
+        }
+        return " " + q.comparator() + " ";
+    }
 
 	private String getAlias(QEntity n) {
 		return n.alias().equals("") ? n.name() : n.alias();

@@ -1,10 +1,7 @@
 package io.breezil.queryfier.engine;
 
-import static org.junit.Assert.*;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import io.breezil.queryfier.dto.StateFilter;
 import io.breezil.queryfier.entities.City;
