@@ -6,11 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
-import org.hibernate.transform.Transformers;
-
 public class QQuery {
     private String from;
     private final List<QProjection> projections;
@@ -27,6 +22,10 @@ public class QQuery {
     
     public Class<? extends Object> getEntity() {
         return this.entity;
+    }
+    
+    public Map<String, Object> getParameters() {
+        return this.parameters;
     }
     
     public void setEntity(Class<? extends Object> entity) {
@@ -82,6 +81,16 @@ public class QQuery {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
+        b.append(toHql());
+        b.append("\n\n\n\n");
+        printParameters(b);
+        b.append("\n");
+        
+        return b.toString();
+    }
+
+    public String toHql() {
+        StringBuilder b = new StringBuilder();
         b.append(mapProjections());
         b.append("\n");
         b.append(getFrom());
@@ -89,10 +98,6 @@ public class QQuery {
         b.append("WHERE 1=1 ");
         b.append("\n");
         b.append(mapSelections());
-        b.append("\n\n\n\n");
-        printParameters(b);
-        b.append("\n");
-        
         return b.toString();
     }
 
@@ -113,16 +118,16 @@ public class QQuery {
         this.projections.add(proj);
     }
     
-    public Query mapToQuery(EntityManager em) {
-        
-        Query q = em.createQuery(toString());
-        mapParameters(q);
-        q.unwrap(org.hibernate.Query.class).setResultTransformer(Transformers.aliasToBean(getEntity()));
-        return q;
-    }
-    
-    private void mapParameters(Query q) {
-        // this.parameters.forEach(p -> q.setFirstResult(p.));
-    }
+    // public Query mapToQuery(EntityManager em) {
+    //
+    // Query q = em.createQuery(toString());
+    // mapParameters(q);
+    // q.unwrap(org.hibernate.Query.class).setResultTransformer(Transformers.aliasToBean(getEntity()));
+    // return q;
+    // }
+    //
+    // private void mapParameters(Query q) {
+    // // this.parameters.forEach(p -> q.setFirstResult(p.));
+    // }
     
 }

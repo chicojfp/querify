@@ -1,8 +1,10 @@
 package io.breezil.queryfier.engine;
 
-import java.util.List;
+import java.util.Set;
 
 public interface QBase {
-	public List<String> getColumns();
+    public Set<String> getColumns();
+    
+    public void addColumn(String columnName);
 
 }

@@ -16,7 +16,6 @@ public class StateFilter extends QBaseClass {
 	
 	public StateFilter() {
 		super();
-		this.columns.add("country");
 	}
 	
 	public String getName() {

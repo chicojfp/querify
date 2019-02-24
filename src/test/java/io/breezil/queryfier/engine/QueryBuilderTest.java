@@ -30,13 +30,13 @@ public class QueryBuilderTest {
 		sf.setGovernor("Paulo Câmara");
 		sf.setMain("Recife");
 		sf.setName("PE");
+        
+        sf.addColumn("country");
+        sf.addColumn("main");
 		
 		QQuery q = null;
 		try {
 			q = new QueryBuilder().parseQuery(sf);
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (IllegalAccessException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
