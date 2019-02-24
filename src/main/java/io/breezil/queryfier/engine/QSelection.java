@@ -2,8 +2,29 @@ package io.breezil.queryfier.engine;
 
 public class QSelection {
     private String column;
-    private String value;
-    private String operation;
+    private String alias;
+    private final String comparator;
+    
+    public QSelection() {
+        this.comparator = " = ";
+    }
+    
+    public QSelection(String column) {
+        this();
+        this.column = column;
+    }
+    
+    public QSelection(String column, String alias) {
+        this();
+        this.column = column;
+        this.alias = alias;
+    }
+    
+    public QSelection(String column, String alias, String comparator) {
+        this.column = column;
+        this.alias = alias;
+        this.comparator = comparator;
+    }
     
     public String getColumn() {
         return this.column;
@@ -13,12 +34,35 @@ public class QSelection {
         this.column = column;
     }
     
-    public String getOperation() {
-        return this.operation;
+    public String getAlias() {
+        return this.alias;
     }
     
-    public void setOperation(String operation) {
-        this.operation = operation;
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
     
+    public String getComparator() {
+        return this.comparator;
+    }
+    
+    @Override
+    public String toString() {
+        return toString("");
+    }
+    
+    public String toString(String parentAlias) {
+        parentAlias = configureAlias(parentAlias);
+        return String.format(" AND %s%s %s :%s", parentAlias, getColumn(), getComparator(), getAlias());
+    }
+    
+    private String configureAlias(String parentAlias) {
+        if (parentAlias == null) {
+            parentAlias = "";
+        }
+        if (parentAlias.trim().length() > 0) {
+            parentAlias += ".";
+        }
+        return parentAlias;
+    }
 }

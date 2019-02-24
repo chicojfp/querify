@@ -1,13 +1,11 @@
 package io.breezil.queryfier.dto;
 
-import java.util.List;
-
-import io.breezil.queryfier.engine.QBase;
 import io.breezil.queryfier.engine.QBaseClass;
 import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
+import io.breezil.queryfier.entities.State;
 
-@QEntity(name="State", alias="s")
+@QEntity(name = State.class, alias = "s")
 public class StateFilter extends QBaseClass {
 	String name;
 	String governor;
@@ -22,25 +20,25 @@ public class StateFilter extends QBaseClass {
 	}
 	
 	public String getName() {
-		return name;
+		return this.name;
 	}
 	public void setName(String name) {
 		this.name = name;
 	}
 	public String getGovernor() {
-		return governor;
+		return this.governor;
 	}
 	public void setGovernor(String governor) {
 		this.governor = governor;
 	}
 	public String getCountry() {
-		return country;
+		return this.country;
 	}
 	public void setCountry(String country) {
 		this.country = country;
 	}
 	public String getMain() {
-		return main;
+		return this.main;
 	}
 	public void setMain(String main) {
 		this.main = main;

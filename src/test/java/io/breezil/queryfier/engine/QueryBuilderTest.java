@@ -18,7 +18,7 @@ public class QueryBuilderTest {
 		s.setMain(t);
 		t.setName("Recife");
 		s.setName("PE");
-		t = new City();
+        t = new City();
 		t.setName("Surubim");
 		
 	}

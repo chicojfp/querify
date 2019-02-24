@@ -10,21 +10,36 @@ public class QProjection {
 	}
 	
 	public String getName() {
-		return name;
+		return this.name;
 	}
 	public void setName(String name) {
 		this.name = name;
 	}
 	public String getAlias() {
-		return alias;
+		return this.alias;
 	}
 	public void setAlias(String alias) {
 		this.alias = alias;
 	}
 	
 	@Override
-	public String toString() {
-		return this.name + " " + this.alias; 
-	}
+    public String toString() {
+        return toString("");
+    }
+    
+    public String toString(String parentAlias) {
+        parentAlias = configureAlias(parentAlias);
+        return String.format(" %s%s %s", parentAlias, this.name, this.alias);
+    }
+
+    private String configureAlias(String parentAlias) {
+        if (parentAlias == null) {
+            parentAlias = "";
+        }
+        if (parentAlias.trim().length() > 0) {
+            parentAlias += ".";
+        }
+        return parentAlias;
+    }
 
 }
