@@ -1,8 +1,8 @@
 package io.breezil.queryfier.engine;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
@@ -18,19 +18,34 @@ public class QueryBuilder {
 		Class<? extends Object> classToParse = toParse.getClass();
 		configureAlias(q, classToParse);
 		
-        Map<String, String> projections = new HashMap<>();
+        List<QProjection> projections = new ArrayList<>();
 		for(Field f : classToParse.getDeclaredFields()) {
 			configureProjectionAndSelections(toParse, q, f);
-            projections.put(f.getName(), getColumnName(f));
+            projections.add(new QProjection(getColumnName(f), f.getName()));
 		}
         
-		for (String columnsAlias : toParse.getColumns()) {
-			String actualColumns = projections.get(columnsAlias);
-            q.addProjection(new QProjection(actualColumns, columnsAlias));
-		}
+		configureProjections(toParse, q, projections);
 		
 		return q;
 	}
+
+    private void configureProjections(QBase toParse, QQuery q, List<QProjection> projections) {
+        if (toParse.getColumns().isEmpty()) {
+            projections.forEach(p -> q.addProjection(p));
+        } else {
+            projections.stream().filter(p -> {
+                // System.out.println(toParse.getColumns());
+                // System.out.println(" Contém ");
+                // System.out.println(p.getAlias());
+                // System.out.println(toParse.getColumns().contains(p.getAlias()));
+                return toParse.getColumns().contains(p.getAlias());
+            }).forEach(p -> q.addProjection(p));
+//            for (String columnsAlias : toParse.getColumns()) {
+//                String actualColumns = projections.get(columnsAlias);
+//                q.addProjection(new QProjection(actualColumns, columnsAlias));
+//            }
+        }
+    }
 
     private void configureProjectionAndSelections(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
         f.setAccessible(true);
