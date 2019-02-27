@@ -33,6 +33,10 @@ public class QueryBuilderTest {
         
         sf.addColumn("country");
         sf.addColumn("main");
+        
+        sf.addSortedColumn("governor");
+        sf.addSortedColumn("!main");
+        
 		
 		QQuery q = null;
 		try {

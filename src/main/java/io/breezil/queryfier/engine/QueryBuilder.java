@@ -26,6 +26,10 @@ public class QueryBuilder {
         
 		configureProjections(toParse, q, projections);
 		
+		if (toParse instanceof QSortableQuery) {
+			q.addSortColumns(((QSortableQuery)toParse).getSortedColumns());
+		}
+		
 		return q;
 	}
 

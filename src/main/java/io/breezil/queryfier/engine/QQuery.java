@@ -2,22 +2,24 @@ package io.breezil.queryfier.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class QQuery {
-    private String from;
     private final List<QProjection> projections;
     private final List<QSelection> selections;
+    private final List<QSort> sortColumns;
     private final Map<String, Object> parameters;
     private Class<? extends Object> entity;
     private String alias;
     
     public QQuery() {
+    	this.parameters = new HashMap<>();
         this.projections = new ArrayList<>();
         this.selections = new ArrayList<>();
-        this.parameters = new HashMap<>();
+        this.sortColumns = new ArrayList<>();
     }
     
     public Class<? extends Object> getEntity() {
@@ -41,13 +43,15 @@ public class QQuery {
     }
     
     public String mapProjections() {
-        return getSelectStatement() + this.projections.stream().map(p -> p.toString(getAlias())).collect(Collectors.joining(",\n"));
+        return getSelectStatement() + this.projections.stream()
+        	.map(p -> p.toString(getAlias()))
+        	.collect(Collectors.joining(",\n"));
     }
 
     private String getSelectStatement() {
         String select = "";
         if (!this.projections.isEmpty()) {
-            select = "select \n";
+            select = "SELECT \n";
         }
         return select;
     }
@@ -58,16 +62,12 @@ public class QQuery {
     
     public String getFrom() {
         StringBuilder b = new StringBuilder();
-        b.append(" from ");
+        b.append(" FROM ");
         b.append(getEntity().getName());
         b.append(" ");
         b.append(this.alias);
         
         return b.toString();
-    }
-    
-    public void setFrom(String from) {
-        this.from = from;
     }
     
     public void addSelection(String selection) {
@@ -98,7 +98,21 @@ public class QQuery {
         b.append("WHERE 1=1 ");
         b.append("\n");
         b.append(mapSelections());
+        b.append("\n");
+        b.append(createOrderBy());
         return b.toString();
+    }
+    
+    public String createOrderBy () {
+    	StringBuilder b = new StringBuilder();
+    	if (!this.sortColumns.isEmpty()) {
+			b.append(" ORDER BY ");
+			b.append( this.sortColumns.stream()
+				.map(sort -> sort.getName() + " " + sort.getOrder())
+				.collect(Collectors.joining(", "))
+			);
+		}
+    	return b.toString();
     }
 
     private void printParameters(StringBuilder b) {
@@ -117,6 +131,17 @@ public class QQuery {
     public void addProjection(QProjection proj) {
         this.projections.add(proj);
     }
+
+	public void addSortColumns(Iterator<String> sortedColumns) {
+		sortedColumns.forEachRemaining(column -> {
+			String order = "ASC";
+			if (column.startsWith("!")) {
+				order = "DESC";
+				column = column.substring(1);
+			}
+			this.sortColumns.add(new QSort(column, order));
+		});
+	}
     
     // public Query mapToQuery(EntityManager em) {
     //

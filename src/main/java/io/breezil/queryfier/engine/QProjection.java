@@ -29,7 +29,7 @@ public class QProjection {
     
     public String toString(String parentAlias) {
         parentAlias = configureAlias(parentAlias);
-        return String.format(" %s%s as %s", parentAlias, this.name, this.alias);
+        return String.format(" %s%s AS %s", parentAlias, this.name, this.alias);
     }
 
     private String configureAlias(String parentAlias) {
