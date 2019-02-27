@@ -132,8 +132,8 @@ public class QQuery {
         this.projections.add(proj);
     }
 
-	public void addSortColumns(Iterator<String> sortedColumns) {
-		sortedColumns.forEachRemaining(column -> {
+	public void addSortColumns(List<String> sortedColumns) {
+		sortedColumns.forEach(column -> {
 			String order = "ASC";
 			if (column.startsWith("!")) {
 				order = "DESC";

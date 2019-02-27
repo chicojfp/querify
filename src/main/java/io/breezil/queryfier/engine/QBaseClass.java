@@ -1,16 +1,17 @@
 package io.breezil.queryfier.engine;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 public class QBaseClass implements QBase, QSortableQuery {
     private final Set<String> columns;
-    private final Set<String> sortedColumns;
+    private final List<String> sortedColumns;
     
     public QBaseClass() {
         this.columns = new HashSet<>();
-        this.sortedColumns = new HashSet<>();
+        this.sortedColumns = new ArrayList<>();
     }
     
     public void addColumns(String... columnNames) {
@@ -29,8 +30,8 @@ public class QBaseClass implements QBase, QSortableQuery {
         this.columns.add(columnNames);
     }
 
-	public Iterator<String> getSortedColumns() {
-		return sortedColumns.iterator();
+	public List<String> getSortedColumns() {
+		return this.sortedColumns;
 	}
 	
 	public void removeSortedColumn(String columnName) {

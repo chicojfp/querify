@@ -1,4 +1,4 @@
-package io.breezil.queryfier.dto;
+package io.breezil.queryfier.engine;
 
 import io.breezil.queryfier.engine.QBaseClass;
 import io.breezil.queryfier.engine.annotations.QEntity;

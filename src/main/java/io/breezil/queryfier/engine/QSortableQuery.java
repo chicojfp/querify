@@ -1,10 +1,10 @@
 package io.breezil.queryfier.engine;
 
-import java.util.Iterator;
+import java.util.List;
 
 public interface QSortableQuery {
 	
-	public Iterator<String> getSortedColumns();
+	public List<String> getSortedColumns();
 	
 	public void removeSortedColumn(String columnName);
 	
