@@ -17,34 +17,55 @@ public class QueryBuilder {
 		if (toParse == null) {
 			return null;
 		}
-		Map<String, String> columnAlias = new HashMap<>();
+		Map<String, String> allAlias2Cols = new HashMap<>();
 
 		QQuery q = new QQuery();
 		Class<? extends Object> classToParse = toParse.getClass();
 		configureAlias(q, classToParse);
 
-		List<QProjection> projections = new ArrayList<>();
+		List<QProjection> allProjections = new ArrayList<>();
 		for (Field f : classToParse.getDeclaredFields()) {
 			configureProjectionAndSelections(toParse, q, f);
-			projections.add(new QProjection(getColumnName(f), f.getName()));
-			columnAlias.put(f.getName(), getColumnName(f));
+			allProjections.add(new QProjection(getColumnName(f), f.getName()));
+			allAlias2Cols.put(f.getName(), getColumnName(f));
 		}
 
-		configureProjections(toParse, q, projections);
+		configureProjections(toParse, q, allProjections);
 
-		if (toParse instanceof QSortableQuery) {
-			List<String> sorted = ((QSortableQuery) toParse).getSortedColumns();
-			
-			List<String> actualNames = sorted.stream().map(s -> {
-				String ac = columnAlias.get(s.replace("!", ""));
-				return (s.startsWith("!") ? "!" : "") + ac;
-			}).collect(Collectors.toList());
-			
-
-			q.addSortColumns(actualNames);
-		}
+		configureSortedColumns(toParse, allAlias2Cols, q);
 
 		return q;
+	}
+
+	private void configureSortedColumns(QBase toParse, Map<String, String> columnAlias, QQuery q) {
+		if (toParse instanceof QSortableQuery) {
+			List<String> sortedAlias = ((QSortableQuery) toParse).getSortedColumns();
+			sortedAlias = mapAlias2ActualNames(columnAlias, sortedAlias);
+			
+			List<QSort> sortedCols = this.mapToActualColumns(sortedAlias);
+			q.addSortColumns(sortedCols);
+		}
+	}
+
+	private List<String> mapAlias2ActualNames(Map<String, String> columnAlias, List<String> colsToParse) {
+		colsToParse = colsToParse.stream().map(s -> {
+			String ac = columnAlias.get(s.replace("!", ""));
+//			String ac = columnAlias.stream()
+//					.map(p -> p.getAlias()).filter(p -> p.equals(s.replace("!", ""))).findFirst().get();
+			return (s.startsWith("!") ? "!" : "") + ac;
+		}).collect(Collectors.toList());
+		return colsToParse;
+	}
+	
+	public List<QSort> mapToActualColumns(List<String> sortedColumns) {
+		return sortedColumns.stream().map(column -> {
+			String order = "ASC";
+			if (column.startsWith("!")) {
+				order = "DESC";
+				column = column.substring(1);
+			}
+			return new QSort(column, order);
+		}).collect(Collectors.toList());
 	}
 
 	private void configureProjections(QBase toParse, QQuery q, List<QProjection> projections) {

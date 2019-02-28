@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import io.breezil.queryfier.engine.sql.HQLFormatter;
+import io.breezil.queryfier.engine.sql.ParamFormatter;
 
 public class QQuery {
     private final List<QProjection> projections;
@@ -41,34 +43,6 @@ public class QQuery {
         this.alias = alias;
     }
     
-    public String mapProjections() {
-        return getSelectStatement() + this.projections.stream()
-        	.map(p -> p.toString(getAlias()))
-        	.collect(Collectors.joining(",\n"));
-    }
-
-    private String getSelectStatement() {
-        String select = "";
-        if (!this.projections.isEmpty()) {
-            select = "SELECT \n";
-        }
-        return select;
-    }
-    
-    public String mapSelections() {
-        return this.selections.stream().map(p -> p.toString(getAlias())).collect(Collectors.joining("\n"));
-    }
-    
-    public String getFrom() {
-        StringBuilder b = new StringBuilder();
-        b.append(" FROM ");
-        b.append(getEntity().getName());
-        b.append(" ");
-        b.append(this.alias);
-        
-        return b.toString();
-    }
-    
     public void addSelection(String selection) {
         this.selections.add(new QSelection(selection));
     }
@@ -77,50 +51,18 @@ public class QQuery {
         this.selections.add(selection);
     }
     
+	public String toHql() {
+        return new HQLFormatter(this).toString();
+    }
+    
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append(toHql());
         b.append("\n\n\n\n");
-        printParameters(b);
+        b.append(new ParamFormatter(this).toString());
         b.append("\n");
-        
         return b.toString();
-    }
-
-    public String toHql() {
-        StringBuilder b = new StringBuilder();
-        b.append(mapProjections());
-        b.append("\n");
-        b.append(getFrom());
-        b.append("\n");
-        b.append("WHERE 1=1 ");
-        b.append("\n");
-        b.append(mapSelections());
-        b.append("\n");
-        b.append(createOrderBy());
-        return b.toString();
-    }
-    
-    public String createOrderBy () {
-    	StringBuilder b = new StringBuilder();
-    	if (!this.sortColumns.isEmpty()) {
-			b.append(" ORDER BY ");
-			b.append( this.sortColumns.stream()
-				.map(sort -> sort.getName() + " " + sort.getOrder())
-				.collect(Collectors.joining(", "))
-			);
-		}
-    	return b.toString();
-    }
-
-    private void printParameters(StringBuilder b) {
-        b.append("Parameters");
-        b.append("\n");
-        for (String key : this.parameters.keySet()) {
-            b.append(String.format("%s -> %s", key, this.parameters.get(key)));
-            b.append("\n");
-        }
     }
     
     public void addParameter(String name, Object value) {
@@ -131,15 +73,8 @@ public class QQuery {
         this.projections.add(proj);
     }
 
-	public void addSortColumns(List<String> sortedColumns) {
-		sortedColumns.forEach(column -> {
-			String order = "ASC";
-			if (column.startsWith("!")) {
-				order = "DESC";
-				column = column.substring(1);
-			}
-			this.sortColumns.add(new QSort(column, order));
-		});
+	public void addSortColumns(List<QSort> sortedColumns) {
+		this.sortColumns.addAll(sortedColumns);
 	}
 
 	public List<QProjection> getProjections() {
@@ -154,18 +89,4 @@ public class QQuery {
 		return sortColumns;
 	}
 
-	
-    
-    // public Query mapToQuery(EntityManager em) {
-    //
-    // Query q = em.createQuery(toString());
-    // mapParameters(q);
-    // q.unwrap(org.hibernate.Query.class).setResultTransformer(Transformers.aliasToBean(getEntity()));
-    // return q;
-    // }
-    //
-    // private void mapParameters(Query q) {
-    // // this.parameters.forEach(p -> q.setFirstResult(p.));
-    // }
-    
 }
