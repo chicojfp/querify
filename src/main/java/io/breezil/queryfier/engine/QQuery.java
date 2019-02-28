@@ -2,7 +2,6 @@ package io.breezil.queryfier.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -142,6 +141,20 @@ public class QQuery {
 			this.sortColumns.add(new QSort(column, order));
 		});
 	}
+
+	public List<QProjection> getProjections() {
+		return projections;
+	}
+
+	public List<QSelection> getSelections() {
+		return selections;
+	}
+
+	public List<QSort> getSortColumns() {
+		return sortColumns;
+	}
+
+	
     
     // public Query mapToQuery(EntityManager em) {
     //
