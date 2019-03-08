@@ -2,16 +2,20 @@ package io.breezil.queryfier.engine;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
 
 public class QueryBuilder {
+
+	private Map<String, String> joinMaps;
 
 	public QQuery parseQuery(QBase toParse) throws IllegalAccessException {
 		if (toParse == null) {
@@ -29,12 +33,70 @@ public class QueryBuilder {
 			allProjections.add(new QProjection(getColumnName(f), f.getName()));
 			allAlias2Cols.put(f.getName(), getColumnName(f));
 		}
+		
+		this.joinMaps = mapAlias2Joins(allAlias2Cols);
 
 		configureProjections(toParse, q, allProjections);
 
 		configureSortedColumns(toParse, allAlias2Cols, q);
+		
+		configureJoins(q);
 
 		return q;
+	}
+
+	private void configureJoins(QQuery q) {
+		Set<String> usedJoins = new HashSet<>();
+		
+		List<String> alias = this.joinMaps.keySet().stream()
+				.sorted(Comparator.comparingLong(String::length).reversed())
+				.collect(Collectors.toList());
+		
+		q.getProjections().forEach(p -> {
+			String match = alias.stream().filter(a -> p.getName().contains(a)).findFirst().orElse(null);
+			if (match != null) {
+				String joinAlias = this.joinMaps.get(match);
+				String newName = p.getName().replace(match, joinAlias);
+				p.setName(newName);
+				p.hasJoinAlias(true);
+				usedJoins.add(match);
+			}
+		});
+		
+		q.getSelections().forEach(p -> {
+			String match = alias.stream().filter(a -> p.getColumn().contains(a)).findFirst().orElse(null);
+			if (match != null) {
+				String joinAlias = this.joinMaps.get(match);
+				String newName = p.getColumn().replace(match, joinAlias);
+				p.setColumn(newName);
+				p.hasJoinAlias(true);
+				usedJoins.add(match);
+			}
+		});
+		
+		usedJoins.forEach(table -> {
+			q.addJoin(table, this.joinMaps.get(table));
+		});
+		
+		System.out.println(usedJoins);
+		
+	}
+
+	private Map<String, String> mapAlias2Joins(Map<String, String> allAlias2Cols) {
+		Map<String, String> joinAlias = new HashMap<>();
+		
+		allAlias2Cols.forEach((alias, column) -> {
+			if (column.contains(".")) {
+				int dotIndex = column.indexOf(".");
+				while (dotIndex > 0) {
+					String columnName = column.substring(0, dotIndex);
+					joinAlias.putIfAbsent(columnName, columnName.replaceAll("\\.", ""));
+					dotIndex = column.indexOf(".", dotIndex+1);
+				}
+			}
+		});
+		
+		return joinAlias;
 	}
 
 	private void configureSortedColumns(QBase toParse, Map<String, String> columnAlias, QQuery q) {

@@ -12,6 +12,7 @@ public class HQLFormatter {
         b.append(mapProjections(query));
         b.append("\n");
         b.append(getFrom(query));
+        b.append(getJoins(query));
         b.append("\n");
         b.append("WHERE 1=1 ");
         b.append("\n");
@@ -22,6 +23,14 @@ public class HQLFormatter {
         this.query = b.toString();
 	}
 	
+	private Object getJoins(QQuery query) {
+		StringBuilder builder = new StringBuilder();
+		query.getJoins().forEach((tabela, alias) -> {
+			builder.append("\n INNER JOIN " + query.getAlias() + "." + tabela + " AS " + alias);
+		});
+		return builder.toString();
+	}
+
 	public String toHql() {
         return query;
     }
@@ -50,7 +59,7 @@ public class HQLFormatter {
         StringBuilder b = new StringBuilder();
         b.append(" FROM ");
         b.append(query.getEntity().getName());
-        b.append(" ");
+        b.append(" AS ");
         b.append(query.getAlias());
         
         return b.toString();

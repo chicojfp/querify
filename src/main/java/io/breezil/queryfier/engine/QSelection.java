@@ -4,6 +4,7 @@ public class QSelection {
     private String column;
     private String alias;
     private final String comparator;
+	private boolean hasJoinAlias;
     
     public QSelection() {
         this.comparator = " = ";
@@ -57,7 +58,7 @@ public class QSelection {
     }
     
     private String configureAlias(String parentAlias) {
-        if (parentAlias == null) {
+        if (parentAlias == null || this.hasJoinAlias) {
             parentAlias = "";
         }
         if (parentAlias.trim().length() > 0) {
@@ -65,4 +66,8 @@ public class QSelection {
         }
         return parentAlias;
     }
+
+	public void hasJoinAlias(boolean hasJoinAlias) {
+		this.hasJoinAlias = hasJoinAlias;
+	}
 }

@@ -3,6 +3,7 @@ package io.breezil.queryfier.engine;
 public class QProjection {
 	private String name;
 	private String alias;
+	private boolean hasJoinAlias;
 	
 	public QProjection(String name, String alias) {
 		this.name = name;
@@ -33,7 +34,7 @@ public class QProjection {
     }
 
     private String configureAlias(String parentAlias) {
-        if (parentAlias == null) {
+        if (parentAlias == null || this.hasJoinAlias) {
             parentAlias = "";
         }
         if (parentAlias.trim().length() > 0) {
@@ -41,5 +42,9 @@ public class QProjection {
         }
         return parentAlias;
     }
+
+	public void hasJoinAlias(boolean hasJoinAlias) {
+		this.hasJoinAlias = hasJoinAlias;
+	}
 
 }
