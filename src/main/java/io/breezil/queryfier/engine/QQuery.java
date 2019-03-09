@@ -1,6 +1,7 @@
 package io.breezil.queryfier.engine;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ public class QQuery {
     private final List<QSelection> selections;
     private final List<QSort> sortColumns;
     private final Map<String, Object> parameters;
+    private final List<QJoin> joins;
     private Class<? extends Object> entity;
     private String alias;
     
@@ -21,6 +23,7 @@ public class QQuery {
         this.projections = new ArrayList<>();
         this.selections = new ArrayList<>();
         this.sortColumns = new ArrayList<>();
+        this.joins = new ArrayList<>();
     }
     
     public Class<? extends Object> getEntity() {
@@ -87,6 +90,14 @@ public class QQuery {
 
 	public List<QSort> getSortColumns() {
 		return sortColumns;
+	}
+
+	public void addJoin(QJoin join) {
+		this.joins.add(join);
+	}
+
+	public List<QJoin> getJoins() {
+		return this.joins;
 	}
 
 }

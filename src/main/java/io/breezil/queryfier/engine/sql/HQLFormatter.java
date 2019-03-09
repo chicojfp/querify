@@ -13,6 +13,8 @@ public class HQLFormatter {
         b.append("\n");
         b.append(getFrom(query));
         b.append("\n");
+        b.append(getJoins(query));
+        b.append("\n");
         b.append("WHERE 1=1 ");
         b.append("\n");
         b.append(mapSelections(query));
@@ -22,6 +24,12 @@ public class HQLFormatter {
         this.query = b.toString();
 	}
 	
+	private String getJoins(QQuery query) {
+		return query.getJoins().stream()
+	        	.map(p -> p.toString(query.getAlias()))
+	        	.collect(Collectors.joining("\n"));
+	}
+
 	public String toHql() {
         return query;
     }
@@ -50,7 +58,7 @@ public class HQLFormatter {
         StringBuilder b = new StringBuilder();
         b.append(" FROM ");
         b.append(query.getEntity().getName());
-        b.append(" ");
+        b.append(" AS ");
         b.append(query.getAlias());
         
         return b.toString();
@@ -61,8 +69,8 @@ public class HQLFormatter {
     	if (!query.getSortColumns().isEmpty()) {
 			b.append(" ORDER BY ");
 			b.append(query.getSortColumns().stream()
-				.map(sort -> sort.getName() + " " + sort.getOrder())
-				.collect(Collectors.joining(", "))
+				.map(sort -> sort.toString(query.getAlias()))
+				.collect(Collectors.joining(",\n          "))
 			);
 		}
     	return b.toString();

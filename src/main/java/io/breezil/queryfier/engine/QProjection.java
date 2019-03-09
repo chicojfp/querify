@@ -1,19 +1,20 @@
 package io.breezil.queryfier.engine;
 
 public class QProjection {
-	private String name;
+	private String column;
 	private String alias;
+	private boolean hasJoinAlias;
 	
-	public QProjection(String name, String alias) {
-		this.name = name;
+	public QProjection(String column, String alias) {
+		this.column = column;
 		this.alias = alias;
 	}
 	
-	public String getName() {
-		return this.name;
+	public String getColumn() {
+		return this.column;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setColumn(String column) {
+		this.column = column;
 	}
 	public String getAlias() {
 		return this.alias;
@@ -29,11 +30,11 @@ public class QProjection {
     
     public String toString(String parentAlias) {
         parentAlias = configureAlias(parentAlias);
-        return String.format(" %s%s AS %s", parentAlias, this.name, this.alias);
+        return String.format(" %s%s AS %s", parentAlias, this.column, this.alias);
     }
 
     private String configureAlias(String parentAlias) {
-        if (parentAlias == null) {
+        if (parentAlias == null || this.hasJoinAlias) {
             parentAlias = "";
         }
         if (parentAlias.trim().length() > 0) {
@@ -41,5 +42,9 @@ public class QProjection {
         }
         return parentAlias;
     }
+
+	public void hasJoinAlias(boolean hasJoinAlias) {
+		this.hasJoinAlias = hasJoinAlias;
+	}
 
 }
