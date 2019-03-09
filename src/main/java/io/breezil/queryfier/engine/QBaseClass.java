@@ -41,8 +41,10 @@ public class QBaseClass implements QBase, QSortableQuery {
 		this.sortedColumns.remove(found);
 	}
 	
-	public void addSortedColumn(String columnName) {
-		this.sortedColumns.add(columnName);
+	public void addSortedColumns(String... columnName) {
+		for (String name : columnName) {
+			this.sortedColumns.add(name);
+		}
 	}
     
 }

@@ -17,6 +17,9 @@ import io.breezil.queryfier.engine.enums.JoinType;
 
 public class QueryBuilder {
 
+	private static final String DESC = "DESC";
+	private static final String ASC = "ASC";
+	private static final String NOT = "!";
 	private Map<String, QJoin> joinMaps;
 	
 	public QueryBuilder() {
@@ -94,46 +97,16 @@ public class QueryBuilder {
 				.sorted(Comparator.comparingLong(String::length).reversed())
 				.collect(Collectors.toList());
 		
-		q.getProjections().forEach(p -> {
-			String match = alias.stream()
-					.filter(a -> p.getColumn().contains(a))
-					.findFirst().orElse(null);
-			
-			if (match != null) {
-				QJoin joinAlias = this.joinMaps.get(match);
-				String newName = p.getColumn().replace(match, joinAlias.getAlias());
-				p.setColumn(newName);
-				p.hasJoinAlias(true);
-				usedJoins.add(match);
-			}
+		q.getProjections().stream().map(s -> (QSection)s).forEach(p -> {
+			usedJoins.addAll(remapJoinedAlias(alias, p));
 		});
 		
-		q.getSelections().forEach(s -> {
-			String match = alias.stream()
-					.filter(a -> s.getColumn().contains(a))
-					.findFirst().orElse(null);
-			
-			if (match != null) {
-				QJoin joinAlias = this.joinMaps.get(match);
-				String newName = s.getColumn().replace(match, joinAlias.getAlias());
-				s.setColumn(newName);
-				s.hasJoinAlias(true);
-				usedJoins.add(match);
-			}
+		q.getSelections().stream().map(s -> (QSection)s ).forEach(s -> {
+			usedJoins.addAll(remapJoinedAlias(alias, s));
 		});
 		
-		q.getSortColumns().forEach(s -> {
-			String match = alias.stream()
-					.filter(a -> s.getName().contains(a))
-					.findFirst().orElse(null);
-			
-			if (match != null) {
-				QJoin joinAlias = this.joinMaps.get(match);
-				String newName = s.getName().replace(match, joinAlias.getAlias());
-				s.setName(newName);
-				s.hasJoinAlias(true);
-				usedJoins.add(match);
-			}
+		q.getSortColumns().stream().map(s -> (QSection)s ).forEach(s -> {
+			usedJoins.addAll(remapJoinedAlias(alias, s));
 		});
 		
 		usedJoins.forEach(table -> {
@@ -142,6 +115,22 @@ public class QueryBuilder {
 		
 		System.out.println(usedJoins);
 		
+	}
+
+	private Set<String> remapJoinedAlias(List<String> alias, QSection s) {
+		Set<String> usedJoins = new HashSet<>();
+		String match = alias.stream()
+				.filter(a -> s.getItem().contains(a))
+				.findFirst().orElse(null);
+		
+		if (match != null) {
+			QJoin joinAlias = this.joinMaps.get(match);
+			String newName = s.getItem().replace(match, joinAlias.getAlias());
+			s.setItem(newName);
+			s.hasJoinAlias(true);
+			usedJoins.add(match);
+		}
+		return usedJoins;
 	}
 
 	private Map<String, QJoin> mapAlias2Joins(Map<String, QField> allAlias2Cols) {
@@ -154,7 +143,7 @@ public class QueryBuilder {
 				QJoin join = null;
 				while (dotIndex > 0) {
 					String tableName = column.substring(0, dotIndex);
-					join = new QJoin(tableName, tableName.replaceAll("\\.", ""), table.join(), join == null);
+					join = new QJoin(tableName, tableName.replaceAll("\\.", ""), table.join(), join != null);
 					joinAlias.putIfAbsent(tableName, join);
 					dotIndex = column.indexOf(".", dotIndex+1);
 				}
@@ -176,19 +165,17 @@ public class QueryBuilder {
 
 	private List<String> mapAlias2ActualNames(Map<String, QField> columnAlias, List<String> colsToParse) {
 		colsToParse = colsToParse.stream().map(s -> {
-			String ac = columnAlias.get(s.replace("!", "")).name();
-//			String ac = columnAlias.stream()
-//					.map(p -> p.getAlias()).filter(p -> p.equals(s.replace("!", ""))).findFirst().get();
-			return (s.startsWith("!") ? "!" : "") + ac;
+			String ac = columnAlias.get(s.replace(NOT, "")).name();
+			return (s.startsWith(NOT) ? NOT : "") + ac;
 		}).collect(Collectors.toList());
 		return colsToParse;
 	}
 	
 	public List<QSort> mapToActualColumns(List<String> sortedColumns) {
 		return sortedColumns.stream().map(column -> {
-			String order = "ASC";
-			if (column.startsWith("!")) {
-				order = "DESC";
+			String order = ASC;
+			if (column.startsWith(NOT)) {
+				order = DESC;
 				column = column.substring(1);
 			}
 			return new QSort(column, order);

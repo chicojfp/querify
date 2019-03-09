@@ -49,7 +49,7 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void deveOrdenarAscendentemente() {
-		sf.addSortedColumn("governor");
+		sf.addSortedColumns("governor");
 		QQuery q = convertDTO2Query(sf);
 		Assert.assertEquals("A consulta deveria retornar apenas 1 projeção.",
 				ONE_SORTED_COLUNM, q.getSortColumns().size());
@@ -60,7 +60,7 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void deveOrdenarDescendentemente() {
-		sf.addSortedColumn("!name");
+		sf.addSortedColumns("!name");
 		QQuery q = convertDTO2Query(sf);
 		Assert.assertEquals("A consulta deveria retornar apenas 1 projeção.",
 				ONE_SORTED_COLUNM, q.getSortColumns().size());
@@ -84,14 +84,14 @@ public class QueryBuilderTest {
 		QQuery q = addSortedColumns();
 		
 		Assert.assertEquals("A ordenação não está ordenando descendentemente quando usa o padrão !nome_coluna.",
-				"main", q.getSortColumns().get(0).getName());
+				"main", q.getSortColumns().get(0).getItem());
 		Assert.assertEquals("A ordenação não está ordenando ascendente por padrão.",
-				"governor", q.getSortColumns().get(1).getName());
+				"governor", q.getSortColumns().get(1).getItem());
 	}
 
 	private QQuery addSortedColumns() {
-		sf.addSortedColumn("!main");
-		sf.addSortedColumn("governor");
+		sf.addSortedColumns("!main");
+		sf.addSortedColumns("governor");
 		QQuery q = convertDTO2Query(sf);
 		Assert.assertEquals("A consulta deveria retornar duas projeções.",
 				TWO_SORTED_COLUNM, q.getSortColumns().size());
@@ -113,7 +113,7 @@ public class QueryBuilderTest {
 		Assert.assertEquals("Deve haver uma projeção para o campo não nulo",
 				COUNTRY_COLUMN_ALIAS, q.getSelections().get(0).getAlias());
 		Assert.assertEquals("Deve haver um mapeamento para o nome real da coluna",
-				COUNTRY_COLUMN_FULL_NAME, q.getSelections().get(0).getColumn());
+				COUNTRY_COLUMN_FULL_NAME, q.getSelections().get(0).getItem());
 		
 		sf.setName("PE");
 		q = convertDTO2Query(sf);
@@ -122,7 +122,7 @@ public class QueryBuilderTest {
 		Assert.assertEquals("Deve haver uma projeção para o campo não nulo",
 				NAME_COLUMN_ALIAS, q.getSelections().get(0).getAlias());
 		Assert.assertEquals("Deve haver uma projeção para o campo não nulo",
-				NAME_COLUMN_FULL_NAME, q.getSelections().get(0).getColumn());
+				NAME_COLUMN_FULL_NAME, q.getSelections().get(0).getItem());
 	} 
 	
 	@Test
@@ -136,8 +136,8 @@ public class QueryBuilderTest {
         sf.addColumn("country");
         sf.addColumn("main");
         
-        sf.addSortedColumn("country");
-        sf.addSortedColumn("!main");
+        sf.addSortedColumns("country");
+        sf.addSortedColumns("!main");
         
 		QQuery q = convertDTO2Query(sf);
 		System.out.println(q);
@@ -162,8 +162,8 @@ public class QueryBuilderTest {
         sf.setName("Bruzudanga");
         
         
-        sf.addSortedColumn("major");
-        sf.addSortedColumn("!name");
+        sf.addSortedColumns("major");
+        sf.addSortedColumns("!name");
         
 		
 		QQuery q = null;

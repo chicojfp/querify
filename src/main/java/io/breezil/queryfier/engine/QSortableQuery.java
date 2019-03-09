@@ -8,6 +8,6 @@ public interface QSortableQuery {
 	
 	public void removeSortedColumn(String columnName);
 	
-	public void addSortedColumn(String columnName);
+	public void addSortedColumns(String... columnName);
 
 }

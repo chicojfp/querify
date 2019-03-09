@@ -1,46 +1,21 @@
 package io.breezil.queryfier.engine;
 
-public class QSelection {
-    private String column;
-    private String alias;
+public class QSelection extends QSection {
     private final String comparator;
-	private boolean hasJoinAlias;
     
     public QSelection() {
+    	super(null, null);
         this.comparator = " = ";
     }
     
-    public QSelection(String column) {
+    public QSelection(String item) {
         this();
-        this.column = column;
+        this.item = item;
     }
     
-    public QSelection(String column, String alias) {
-        this();
-        this.column = column;
-        this.alias = alias;
-    }
-    
-    public QSelection(String column, String alias, String comparator) {
-        this.column = column;
-        this.alias = alias;
+    public QSelection(String item, String alias, String comparator) {
+    	super(item, alias);
         this.comparator = comparator;
-    }
-    
-    public String getColumn() {
-        return this.column;
-    }
-    
-    public void setColumn(String column) {
-        this.column = column;
-    }
-    
-    public String getAlias() {
-        return this.alias;
-    }
-    
-    public void setAlias(String alias) {
-        this.alias = alias;
     }
     
     public String getComparator() {
@@ -54,20 +29,7 @@ public class QSelection {
     
     public String toString(String parentAlias) {
         parentAlias = configureAlias(parentAlias);
-        return String.format(" AND %s%s %s :%s", parentAlias, getColumn(), getComparator(), getAlias());
-    }
-    
-    private String configureAlias(String parentAlias) {
-        if (parentAlias == null || this.hasJoinAlias) {
-            parentAlias = "";
-        }
-        if (parentAlias.trim().length() > 0) {
-            parentAlias += ".";
-        }
-        return parentAlias;
+        return String.format(" AND %s%s %s :%s", parentAlias, getItem(), getComparator(), getAlias());
     }
 
-	public void hasJoinAlias(boolean hasJoinAlias) {
-		this.hasJoinAlias = hasJoinAlias;
-	}
 }
