@@ -53,11 +53,11 @@ public class QueryBuilder {
 				.collect(Collectors.toList());
 		
 		q.getProjections().forEach(p -> {
-			String match = alias.stream().filter(a -> p.getName().contains(a)).findFirst().orElse(null);
+			String match = alias.stream().filter(a -> p.getColumn().contains(a)).findFirst().orElse(null);
 			if (match != null) {
 				String joinAlias = this.joinMaps.get(match);
-				String newName = p.getName().replace(match, joinAlias);
-				p.setName(newName);
+				String newName = p.getColumn().replace(match, joinAlias);
+				p.setColumn(newName);
 				p.hasJoinAlias(true);
 				usedJoins.add(match);
 			}
@@ -75,7 +75,7 @@ public class QueryBuilder {
 		});
 		
 		usedJoins.forEach(table -> {
-			q.addJoin(table, this.joinMaps.get(table));
+			q.addJoin(new QJoin(table, this.joinMaps.get(table)));
 		});
 		
 		System.out.println(usedJoins);

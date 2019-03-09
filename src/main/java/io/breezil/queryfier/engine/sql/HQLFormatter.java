@@ -23,12 +23,10 @@ public class HQLFormatter {
         this.query = b.toString();
 	}
 	
-	private Object getJoins(QQuery query) {
-		StringBuilder builder = new StringBuilder();
-		query.getJoins().forEach((tabela, alias) -> {
-			builder.append("\n INNER JOIN " + query.getAlias() + "." + tabela + " AS " + alias);
-		});
-		return builder.toString();
+	private String getJoins(QQuery query) {
+		return query.getJoins().stream()
+	        	.map(p -> p.toString(query.getAlias()))
+	        	.collect(Collectors.joining("  \n"));
 	}
 
 	public String toHql() {
