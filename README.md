@@ -1,10 +1,12 @@
 # Queryfier!
 
-Este Framework visa simplificar a criação de consultas ao banco de dados por meio de uso de parâmetros simples anotados através de um DTO ou POJO.
+Este Framework visa simplificar a criação de consultas ao banco de dados por meio de uso de parametrização simples feita através de anotações em propriedades em DTOs ou POJOs.
 
-Ele constrói consultas HQL com base em anotações em propriedades anotadas de classes Java. Assim, uma única classe mapeia um conjunto (universo) de possíveis filtros (seleções) e retornos (projeções) sobre determinada entidade.
+Ele constrói consultas HQL com base em nomes e valores de classes java `DTO`. Assim, uma única classe mapeia um conjunto (universo) de possíveis filtros (seleções) e retornos (projeções) sobre determinada entidade e suas entidades dependentes.
 
 Este Framework visa possibilitar a construção dinâmica de consultas que retornem quaisquer subconjunto de possíveis projeções e seleções realizando as junções necessárias para realizá-las.
+
+A grosso modo, visa criar visões dinâmicas de dados com base no mapeamento JPA e restrições parametrizadas no backend da aplicação.
 
 ## Exemplo prático
 
