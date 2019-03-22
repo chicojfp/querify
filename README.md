@@ -10,12 +10,15 @@ Este Framework visa possibilitar a construção dinâmica de consultas que retor
 
 [Veja detalhes no projeto de exemplo](https://github.com/chicojfp/queryfier-sample)
 
-Existem as classes:
-City (Name, Major, State)
-State (Name, Governor, Capital, Country)
-Country (Name, Presidente, Capital)
+Existem as classes/entidades no referido projeto:
+```java
+class City {Name, Major:Person, State}
+class State {Name, Governor:Person, Capital:City, Country}
+class Country {Name, Presidente:Person, Capital:City}
+class Person {Name}
+```
 
-É definida o DTO de filtro CityFilter anota como:
+É definida o DTO de filtro ``CityFilter`` anota como:
 ```java
 @QEntity(name = City.class, alias = "c")
 public class CityFilter extends QBaseClass {
