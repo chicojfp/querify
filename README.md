@@ -16,7 +16,7 @@ Existem as classes/entidades no referido projeto:
 ```java
 class City {Name, Major:Person, State}
 class State {Name, Governor:Person, Capital:City, Country}
-class Country {Name, Presidente:Person, Capital:City}
+class Country {Name, President:Person, Capital:City}
 class Person {Name}
 ```
 
