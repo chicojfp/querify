@@ -3,6 +3,8 @@ package io.breezil.queryfier.engine;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -195,11 +197,16 @@ public class QueryBuilder {
 	private void configureSelectionAndParameter(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
 		f.setAccessible(true);
 		Object fieldValue = f.get(toParse);
-		if (fieldValue != null) {
+		if (fieldValue != null && !isListaVazia(fieldValue)) {
 			QSelection selection = createSelection(q, f);
+			selection.setParameterList(!isListaVazia(fieldValue));
 			q.addSelection(selection);
 			q.addParameter(f.getName(), fieldValue);
 		}
+	}
+
+	private boolean isListaVazia(Object fieldValue) {
+		return fieldValue instanceof Collection<?> && ((Collection<?>)fieldValue).isEmpty();
 	}
 
 	private QSelection createSelection(QQuery q, Field f) {

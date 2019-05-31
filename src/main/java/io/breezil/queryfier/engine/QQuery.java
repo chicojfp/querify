@@ -12,13 +12,13 @@ public class QQuery {
     private final List<QProjection> projections;
     private final List<QSelection> selections;
     private final List<QSort> sortColumns;
-    private final Map<String, Object> parameters;
+    private final List<QParameter> parameters;
     private final List<QJoin> joins;
     private Class<? extends Object> entity;
     private String alias;
     
     public QQuery() {
-    	this.parameters = new HashMap<>();
+    	this.parameters = new ArrayList<>();
         this.projections = new ArrayList<>();
         this.selections = new ArrayList<>();
         this.sortColumns = new ArrayList<>();
@@ -29,7 +29,7 @@ public class QQuery {
         return this.entity;
     }
     
-    public Map<String, Object> getParameters() {
+    public List<QParameter> getParameters() {
         return this.parameters;
     }
     
@@ -68,7 +68,7 @@ public class QQuery {
     }
     
     public void addParameter(String name, Object value) {
-        this.parameters.put(name, value);
+        this.parameters.add(new QParameter(name, value));
     }
     
     public void addProjection(QProjection proj) {

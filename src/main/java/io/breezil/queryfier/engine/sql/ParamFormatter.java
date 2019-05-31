@@ -1,5 +1,6 @@
 package io.breezil.queryfier.engine.sql;
 
+import io.breezil.queryfier.engine.QParameter;
 import io.breezil.queryfier.engine.QQuery;
 
 public class ParamFormatter {
@@ -14,8 +15,8 @@ public class ParamFormatter {
     	StringBuilder b = new StringBuilder();
         b.append("Parameters");
         b.append("\n");
-        for (String key : query.getParameters().keySet()) {
-            b.append(String.format("%s -> %s", key, query.getParameters().get(key)));
+        for (QParameter key : query.getParameters()) {
+            b.append(String.format("%s -> %s", key.getName(), key.getValue()));
             b.append("\n");
         }
         

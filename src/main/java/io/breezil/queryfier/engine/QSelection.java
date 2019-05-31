@@ -2,6 +2,7 @@ package io.breezil.queryfier.engine;
 
 public class QSelection extends QSection {
     private final String comparator;
+	private boolean list;
     
     public QSelection() {
     	super(null, null);
@@ -29,7 +30,21 @@ public class QSelection extends QSection {
     
     public String toString(String parentAlias) {
         parentAlias = configureAlias(parentAlias);
-        return String.format(" AND %s%s %s :%s", parentAlias, getItem(), getComparator(), getAlias());
+        String compExpression = this.getComparator();
+        if (compExpression.contains("%s")) {
+        	compExpression = String.format(compExpression, ":"+getAlias());
+        } else {
+        	compExpression = String.format(" %s :%s ", compExpression, getAlias());
+        }
+        return String.format(" AND %s%s %s", parentAlias, getItem(), compExpression);
     }
+
+	public void setParameterList(boolean isList) {
+		this.list = isList;
+	}
+	
+	public boolean isParameterList() {
+		return this.list;
+	}
 
 }
