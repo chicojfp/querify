@@ -1,11 +1,13 @@
 package io.breezil.queryfier.engine;
 
+import io.breezil.queryfier.engine.enums.CompType;
+
 public class QSelection extends QSection {
-    private final String comparator;
+    private final CompType comparator;
     
     public QSelection() {
     	super(null, null);
-        this.comparator = " = ";
+        this.comparator = CompType.EQUALS;
     }
     
     public QSelection(String item) {
@@ -13,12 +15,12 @@ public class QSelection extends QSection {
         this.item = item;
     }
     
-    public QSelection(String item, String alias, String comparator) {
+    public QSelection(String item, String alias, CompType comparator) {
     	super(item, alias);
         this.comparator = comparator;
     }
     
-    public String getComparator() {
+    public CompType getComparator() {
         return this.comparator;
     }
     
@@ -29,7 +31,7 @@ public class QSelection extends QSection {
     
     public String toString(String parentAlias) {
         parentAlias = configureAlias(parentAlias);
-        return String.format(" AND %s%s %s :%s", parentAlias, getItem(), getComparator(), getAlias());
+        return String.format(" AND %s%s "+getComparator(), parentAlias, getItem(), ":"+getAlias());
     }
 
 }

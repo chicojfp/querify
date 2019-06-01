@@ -3,6 +3,7 @@ package io.breezil.queryfier.engine;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
+import io.breezil.queryfier.engine.enums.CompType;
 import io.breezil.queryfier.engine.enums.JoinType;
 
 public class QueryBuilder {
@@ -21,7 +23,7 @@ public class QueryBuilder {
 	private static final String ASC = "ASC";
 	private static final String NOT = "!";
 	private Map<String, QJoin> joinMaps;
-	
+
 	public QueryBuilder() {
 		this.joinMaps = new HashMap<>();
 	}
@@ -43,13 +45,13 @@ public class QueryBuilder {
 			allProjections.add(new QProjection(qField.name(), field.getName()));
 			allAlias2Cols.put(field.getName(), qField);
 		}
-		
+
 		this.joinMaps = mapAlias2Joins(allAlias2Cols);
 
 		configureProjections(toParse, q, allProjections);
 
 		configureSortedColumns(toParse, allAlias2Cols, q);
-		
+
 		configureJoins(q);
 
 		return q;
@@ -59,83 +61,79 @@ public class QueryBuilder {
 		QField q = f.getAnnotation(QField.class);
 		if (q == null) {
 			q = new QField() {
-				
+
 				@Override
 				public Class<? extends Annotation> annotationType() {
 					return null;
 				}
-				
+
 				@Override
 				public String valueWrapper() {
 					return null;
 				}
-				
+
 				@Override
 				public String name() {
 					return f.getName();
 				}
-				
+
 				@Override
 				public JoinType join() {
 					return JoinType.INNER_JOIN;
 				}
-				
+
 				@Override
-				public String comparator() {
-					return "=";
+				public CompType comparator() {
+					return CompType.EQUALS;
 				}
 			};
 		}
 		return q;
-		
+
 	}
 
 	private void configureJoins(QQuery q) {
 		Set<String> usedJoins = new HashSet<>();
-		
-		List<String> alias = this.joinMaps.keySet().stream()
-				.sorted(Comparator.comparingLong(String::length).reversed())
+
+		List<String> alias = this.joinMaps.keySet().stream().sorted(Comparator.comparingLong(String::length).reversed())
 				.collect(Collectors.toList());
-		
-		q.getProjections().stream().map(s -> (QSection)s).forEach(p -> {
+
+		q.getProjections().stream().map(s -> (QSection) s).forEach(p -> {
 			usedJoins.addAll(remapJoinedAlias(alias, p));
 		});
-		
-		q.getSelections().stream().map(s -> (QSection)s ).forEach(s -> {
+
+		q.getSelections().stream().map(s -> (QSection) s).forEach(s -> {
 			usedJoins.addAll(remapJoinedAlias(alias, s));
 		});
-		
-		q.getSortColumns().stream().map(s -> (QSection)s ).forEach(s -> {
+
+		q.getSortColumns().stream().map(s -> (QSection) s).forEach(s -> {
 			usedJoins.addAll(remapJoinedAlias(alias, s));
 		});
-		
+
 		usedJoins.forEach(table -> {
 			q.addJoin(this.joinMaps.get(table));
 		});
-		
+
 		System.out.println(usedJoins);
-		
+
 	}
 
 	private Set<String> remapJoinedAlias(List<String> alias, QSection s) {
 		Set<String> usedJoins = new HashSet<>();
-		String match = alias.stream()
-				.filter(a -> s.getItem().contains(a))
-				.findFirst().orElse(null);
-		
-		if (match != null) {
+		alias.stream().filter(a -> s.getItem().contains(a)).forEach(match -> {
 			QJoin joinAlias = this.joinMaps.get(match);
 			String newName = s.getItem().replace(match, joinAlias.getAlias());
 			s.setItem(newName);
 			s.hasJoinAlias(true);
 			usedJoins.add(match);
-		}
+		});
+
 		return usedJoins;
 	}
 
 	private Map<String, QJoin> mapAlias2Joins(Map<String, QField> allAlias2Cols) {
 		Map<String, QJoin> joinAlias = new HashMap<>();
-		
+
 		allAlias2Cols.forEach((alias, table) -> {
 			String column = table.name();
 			if (column.contains(".")) {
@@ -145,11 +143,11 @@ public class QueryBuilder {
 					String tableName = column.substring(0, dotIndex);
 					join = new QJoin(tableName, tableName.replaceAll("\\.", ""), table.join(), join != null);
 					joinAlias.putIfAbsent(tableName, join);
-					dotIndex = column.indexOf(".", dotIndex+1);
+					dotIndex = column.indexOf(".", dotIndex + 1);
 				}
 			}
 		});
-		
+
 		return joinAlias;
 	}
 
@@ -157,7 +155,7 @@ public class QueryBuilder {
 		if (toParse instanceof QSortableQuery) {
 			List<String> sortedAlias = ((QSortableQuery) toParse).getSortedColumns();
 			sortedAlias = mapAlias2ActualNames(columnAlias, sortedAlias);
-			
+
 			List<QSort> sortedCols = this.mapToActualColumns(sortedAlias);
 			q.addSortColumns(sortedCols);
 		}
@@ -170,7 +168,7 @@ public class QueryBuilder {
 		}).collect(Collectors.toList());
 		return colsToParse;
 	}
-	
+
 	public List<QSort> mapToActualColumns(List<String> sortedColumns) {
 		return sortedColumns.stream().map(column -> {
 			String order = ASC;
@@ -195,17 +193,20 @@ public class QueryBuilder {
 	private void configureSelectionAndParameter(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
 		f.setAccessible(true);
 		Object fieldValue = f.get(toParse);
-		if (fieldValue != null) {
+		if (fieldValue != null && isNonEmptyList(fieldValue)) {
 			QSelection selection = createSelection(q, f);
 			q.addSelection(selection);
 			q.addParameter(f.getName(), fieldValue);
 		}
 	}
 
+	private boolean isNonEmptyList(Object fieldValue) {
+		return (fieldValue instanceof Collection<?> && !((Collection<?>) fieldValue).isEmpty());
+	}
+
 	private QSelection createSelection(QQuery q, Field f) {
 		String columnName = getColumnName(f);
-		String operator = getComparator(f);
-		return new QSelection(columnName, f.getName(), operator);
+		return new QSelection(columnName, f.getName(), getComparator(f));
 	}
 
 	private void configureAlias(QQuery q, Class<? extends Object> classToParse) {
@@ -224,10 +225,10 @@ public class QueryBuilder {
 		return q.name();
 	}
 
-	private String getComparator(Field f) {
+	private CompType getComparator(Field f) {
 		QField q = f.getAnnotation(QField.class);
 		if (q == null) {
-			return "=";
+			return CompType.EQUALS;
 		}
 		return q.comparator();
 	}
