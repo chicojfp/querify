@@ -40,6 +40,7 @@ public class QueryBuilder {
 
 		List<QProjection> allProjections = new ArrayList<>();
 		for (Field field : classToParse.getDeclaredFields()) {
+            System.out.println(field.getName());
 			QField qField = getQField(field);
 			configureSelectionAndParameter(toParse, q, field);
 			allProjections.add(new QProjection(qField.name(), field.getName()));
@@ -156,7 +157,7 @@ public class QueryBuilder {
 			List<String> sortedAlias = ((QSortableQuery) toParse).getSortedColumns();
 			sortedAlias = mapAlias2ActualNames(columnAlias, sortedAlias);
 
-			List<QSort> sortedCols = this.mapToActualColumns(sortedAlias);
+			List<QSort> sortedCols = mapToActualColumns(sortedAlias);
 			q.addSortColumns(sortedCols);
 		}
 	}
@@ -193,7 +194,8 @@ public class QueryBuilder {
 	private void configureSelectionAndParameter(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
 		f.setAccessible(true);
 		Object fieldValue = f.get(toParse);
-		if (fieldValue != null && isNonEmptyList(fieldValue)) {
+        System.out.println(fieldValue);
+		if ((fieldValue != null) && isNonEmptyList(fieldValue)) {
 			QSelection selection = createSelection(q, f);
 			q.addSelection(selection);
 			q.addParameter(f.getName(), fieldValue);
@@ -201,7 +203,8 @@ public class QueryBuilder {
 	}
 
 	private boolean isNonEmptyList(Object fieldValue) {
-		return (fieldValue instanceof Collection<?> && !((Collection<?>) fieldValue).isEmpty());
+        return (!(fieldValue instanceof Collection<?>))
+                || ((fieldValue instanceof Collection<?>) && !((Collection<?>) fieldValue).isEmpty());
 	}
 
 	private QSelection createSelection(QQuery q, Field f) {
