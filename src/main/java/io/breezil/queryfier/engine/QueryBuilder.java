@@ -3,6 +3,7 @@ package io.breezil.queryfier.engine;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.engine.annotations.QFieldQuery;
+import io.breezil.queryfier.engine.annotations.QFields;
 import io.breezil.queryfier.engine.enums.CompType;
 import io.breezil.queryfier.engine.enums.JoinType;
 
@@ -41,12 +43,13 @@ public class QueryBuilder {
 
 		List<QProjection> allProjections = new ArrayList<>();
 		for (Field field : classToParse.getDeclaredFields()) {
-			QField qField = getQField(field);
-			if (!qField.ignore()) {
-				configureSelectionAndParameter(toParse, q, field);
-				allProjections.add(new QProjection(qField.name(), field.getName()));
-				allAlias2Cols.put(field.getName(), qField);
-			}
+			getQField(field).forEach(qField -> {
+				if (!qField.ignore()) {
+					createSelectionForField(toParse, q, field);
+					allProjections.add(new QProjection(qField.name(), field.getName()));
+					allAlias2Cols.put(field.getName(), qField);
+				}
+			});
 		}
 
 		this.joinMaps = mapAlias2Joins(allAlias2Cols);
@@ -60,44 +63,73 @@ public class QueryBuilder {
 		return q;
 	}
 
-	private QField getQField(Field f) {
+	private void createSelectionForField(QBase toParse, QQuery q, Field field) {
+		QSelection selection = null;
+		try {
+			selection = configureSelectionAndParameter(toParse, field);
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		if (selection != null) {
+			q.addSelection(selection);
+			selection.addParameters(q);
+		}
+	}
+
+	private List<QField> getQField(Field f) {
+		List<QField> fields = new ArrayList<>();
 		QField q = f.getAnnotation(QField.class);
 		if (q == null) {
-			q = new QField() {
-
-				@Override
-				public Class<? extends Annotation> annotationType() {
-					return null;
-				}
-
-				@Override
-				public String valueWrapper() {
-					return null;
-				}
-
-				@Override
-				public String name() {
-					return f.getName();
-				}
-
-				@Override
-				public JoinType join() {
-					return JoinType.INNER_JOIN;
-				}
-
-				@Override
-				public boolean ignore() {
-					return false;
-				}
-
-				@Override
-				public CompType comparator() {
-					return CompType.EQUALS;
-				}
-			};
+			QFields qFields = f.getAnnotation(QFields.class);
+			if (qFields != null) {
+				fields = Arrays.asList(qFields.filters());
+			}
+			
+			if (fields.isEmpty()) {
+				fields.add(createDefaultQField(f));
+			}
+		} else {
+			fields.add(q);
 		}
-		return q;
+		return fields;
 
+	}
+
+	private QField createDefaultQField(Field f) {
+		QField q;
+		q = new QField() {
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return null;
+			}
+
+			@Override
+			public String valueWrapper() {
+				return null;
+			}
+
+			@Override
+			public String name() {
+				return f.getName();
+			}
+
+			@Override
+			public JoinType join() {
+				return JoinType.INNER_JOIN;
+			}
+
+			@Override
+			public boolean ignore() {
+				return false;
+			}
+
+			@Override
+			public CompType comparator() {
+				return CompType.EQUALS;
+			}
+		};
+		return q;
 	}
 
 	private void configureJoins(QQuery q) {
@@ -198,14 +230,14 @@ public class QueryBuilder {
 		}
 	}
 
-	private void configureSelectionAndParameter(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
+	private QSelection configureSelectionAndParameter(QBase toParse, Field f) throws IllegalAccessException {
 		f.setAccessible(true);
 		Object fieldValue = f.get(toParse);
 		if ((fieldValue != null) && isNonEmptyList(fieldValue)) {
-			QSelection selection = createSelection(toParse, q, f);
-			q.addSelection(selection);
-			selection.addParameters(q);
+			QSelection selection = createSelection(toParse, f);
+			return selection;
 		}
+		return null;
 	}
 
 	private boolean isNonEmptyList(Object fieldValue) {
@@ -213,7 +245,7 @@ public class QueryBuilder {
 				|| ((fieldValue instanceof Collection<?>) && !((Collection<?>) fieldValue).isEmpty());
 	}
 
-	private QSelection createSelection(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
+	private QSelection createSelection(QBase toParse, Field f) throws IllegalAccessException {
 		String columnName = getColumnName(f);
 		QQuery query = createSubquery(toParse, f);
 		return new QSelection(columnName, f.getName(), getComparator(f), f.get(toParse), query);
