@@ -11,8 +11,9 @@ import io.breezil.queryfier.engine.enums.JoinType;
 @Target({ ElementType.FIELD, ElementType.METHOD} )
 @Retention(RetentionPolicy.RUNTIME)
 public @interface QField {
-	String name();
+	String name() default "";
 	CompType comparator() default CompType.EQUALS;
 	String valueWrapper() default "";
 	JoinType join() default JoinType.INNER_JOIN;
+	boolean ignore() default false;
 }
