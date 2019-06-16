@@ -4,8 +4,8 @@ public enum CompType {
 	EQUALS(" = %s "),
 	GT(" > %s "),
 	GE(" >= %s "),
-	MD(" < %s "),
-	ME(" <= %s "),
+	LD(" < %s "),
+	LE(" <= %s "),
 	IN(" IN (%s) "),
 	
 	;

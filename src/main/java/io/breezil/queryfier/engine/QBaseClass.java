@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class QBaseClass implements QBase, QSortableQuery {
+public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery {
     private final Set<String> columns;
     private final List<String> sortedColumns;
     
@@ -30,18 +30,21 @@ public class QBaseClass implements QBase, QSortableQuery {
         this.columns.add(columnNames);
     }
 
-	public List<String> getSortedColumns() {
+	@Override
+    public List<String> getSortedColumns() {
 		return this.sortedColumns;
 	}
 	
-	public void removeSortedColumn(String columnName) {
+	@Override
+    public void removeSortedColumn(String columnName) {
 		String found = this.sortedColumns.stream().filter(p -> {
 			return p.contains(columnName) || columnName.contains(p);
 		}).findFirst().get();
 		this.sortedColumns.remove(found);
 	}
 	
-	public void addSortedColumns(String... columnName) {
+	@Override
+    public void addSortedColumns(String... columnName) {
 		for (String name : columnName) {
 			this.sortedColumns.add(name);
 		}
