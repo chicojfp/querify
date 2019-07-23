@@ -5,6 +5,7 @@ public class QSection {
 	protected String alias;
 	private boolean hasJoinAlias;
 	
+	
 	public QSection(String item, String alias) {
 		this.item = item;
 		this.alias = alias;

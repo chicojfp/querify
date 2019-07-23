@@ -88,6 +88,17 @@ public class QueryBuilderTest {
 		Assert.assertEquals("A ordenação não está ordenando ascendente por padrão.",
 				"governor", q.getSortColumns().get(1).getItem());
 	}
+	
+	@Test
+	public void devePermitirAgruparColunasPorOperador() {
+		sf.addSortedColumns("!main");
+		sf.addSortedColumns("governor");
+		sf.addGroupedColumns("main", "governor");
+		
+		QQuery q = convertDTO2Query(sf);
+		Assert.assertEquals("A consulta deveria retornar duas projeções.",
+				TWO_SORTED_COLUNM, q.getGroupedColumns().size());
+	}
 
 	private QQuery addSortedColumns() {
 		sf.addSortedColumns("!main");

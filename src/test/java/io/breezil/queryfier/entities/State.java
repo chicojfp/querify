@@ -10,6 +10,7 @@ public class State {
 	String governor;
 	Number area;
 	Date foundation;
+	Country country;
 	
 	public List<City> getCities() {
 		return cities;
@@ -47,7 +48,10 @@ public class State {
 	public void setFoundation(Date foundation) {
 		this.foundation = foundation;
 	}
-	
-	
-
+	public Country getCountry() {
+		return country;
+	}
+	public void setCountry(Country country) {
+		this.country = country;
+	}
 }

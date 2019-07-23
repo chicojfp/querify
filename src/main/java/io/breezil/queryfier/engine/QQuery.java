@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.breezil.queryfier.engine.sql.HQLFormatter;
 import io.breezil.queryfier.engine.sql.ParamFormatter;
@@ -81,6 +82,10 @@ public class QQuery {
 
 	public List<QProjection> getProjections() {
 		return projections;
+	}
+	
+	public List<QProjection> getGroupedColumns() {
+		return projections.stream().filter(p -> p.getGrouping() != null).collect(Collectors.toList());
 	}
 
 	public List<QSelection> getSelections() {

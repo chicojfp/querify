@@ -1,9 +1,11 @@
 package io.breezil.queryfier.engine;
 
 public class QProjection extends QSection {
+	private GrouppingType grouping;
 	
-	public QProjection() {
-		super(null, null);
+	public QProjection(String item, String alias, GrouppingType grouping) {
+		super(item, alias);
+		this.grouping = grouping;
 	}
 	
 	public QProjection(String item, String alias) {
@@ -26,6 +28,14 @@ public class QProjection extends QSection {
 	public String toString(String parentAlias) {
 		parentAlias = configureAlias(parentAlias);
 		return String.format(" %s%s AS %s", parentAlias, this.item, this.alias);
+	}
+
+	public GrouppingType getGrouping() {
+		return grouping;
+	}
+
+	public void setGrouping(GrouppingType grouping) {
+		this.grouping = grouping;
 	}
 
 }

@@ -1,18 +1,21 @@
 package io.breezil.queryfier.engine;
 
-import io.breezil.queryfier.engine.QBaseClass;
 import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.entities.State;
 
 @QEntity(name = State.class, alias = "s")
-public class StateFilter extends QBaseClass {
+public class StateFilter extends QBaseClass<State, StateFilter> {
 	String name;
 	String governor;
 	
 	@QField(name="country.name")
 	String country;
+	@QField(name="main.name")
 	String main;
+	
+	@QField(name="cities.name")
+	String city;
 	
 	public StateFilter() {
 		super();

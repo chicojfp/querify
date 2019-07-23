@@ -1,8 +1,8 @@
 package io.breezil.queryfier.engine;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.engine.annotations.QFieldQuery;
 import io.breezil.queryfier.engine.enums.CompType;
-import io.breezil.queryfier.engine.enums.JoinType;
+import io.breezil.queryfier.engine.helper.ReflectionHelper;
 
 public class QueryBuilder {
 
@@ -29,19 +29,21 @@ public class QueryBuilder {
 		this.joinMaps = new HashMap<>();
 	}
 
-	public QQuery parseQuery(QBase toParse) throws IllegalAccessException {
+	public QQuery parseQuery(QBase<?, ?> toParse) throws IllegalAccessException {
 		if (toParse == null) {
 			return null;
 		}
 		Map<String, QField> allAlias2Cols = new HashMap<>();
 
 		QQuery q = new QQuery();
-		Class<? extends Object> classToParse = toParse.getClass();
+		Class<? extends QBase> classToParse = toParse.getClass();
 		configureAlias(q, classToParse);
+		
+//		buildProjections(toParse);
 
 		List<QProjection> allProjections = new ArrayList<>();
 		for (Field field : classToParse.getDeclaredFields()) {
-			QField qField = getQField(field);
+			QField qField = ReflectionHelper.getQField(field);
 			if (!qField.ignore()) {
 				configureSelectionAndParameter(toParse, q, field);
 				allProjections.add(new QProjection(qField.name(), field.getName()));
@@ -60,44 +62,14 @@ public class QueryBuilder {
 		return q;
 	}
 
-	private QField getQField(Field f) {
-		QField q = f.getAnnotation(QField.class);
-		if (q == null) {
-			q = new QField() {
+	
 
-				@Override
-				public Class<? extends Annotation> annotationType() {
-					return null;
-				}
-
-				@Override
-				public String valueWrapper() {
-					return null;
-				}
-
-				@Override
-				public String name() {
-					return f.getName();
-				}
-
-				@Override
-				public JoinType join() {
-					return JoinType.INNER_JOIN;
-				}
-
-				@Override
-				public boolean ignore() {
-					return false;
-				}
-
-				@Override
-				public CompType comparator() {
-					return CompType.EQUALS;
-				}
-			};
-		}
-		return q;
-
+	private void buildProjections(Class<? extends QBase> classToParse) {
+		Arrays.asList(classToParse.getDeclaredFields()).forEach(field -> {
+			QField qField = ReflectionHelper.getQField(field);
+//			QProjection p = new QProjection();
+		});
+		
 	}
 
 	private void configureJoins(QQuery q) {
@@ -201,11 +173,20 @@ public class QueryBuilder {
 	private void configureSelectionAndParameter(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
 		f.setAccessible(true);
 		Object fieldValue = f.get(toParse);
-		if ((fieldValue != null) && isNonEmptyList(fieldValue)) {
+		if (isValidValue(fieldValue) && !hasGroupingColumn(toParse, f)) {
 			QSelection selection = createSelection(toParse, q, f);
 			q.addSelection(selection);
 			selection.addParameters(q);
 		}
+	}
+	
+	private boolean hasGroupingColumn(QBase toParse, Field f) {
+		String columnName = getColumnName(f);
+		return ((QBaseClass)toParse).hasGroupedColumns(columnName);
+	}
+
+	private boolean isValidValue(Object fieldValue) {
+		return (fieldValue != null) && isNonEmptyList(fieldValue);
 	}
 
 	private boolean isNonEmptyList(Object fieldValue) {
