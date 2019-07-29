@@ -1,7 +1,7 @@
 package io.breezil.queryfier.engine;
 
 import io.breezil.queryfier.engine.enums.CompType;
-import io.breezil.queryfier.engine.sql.HQLFormatter;
+import io.breezil.queryfier.engine.sql.HQLFormatterDTO;
 
 public class QSelection extends QSection {
 	private final CompType comparator;
@@ -34,7 +34,8 @@ public class QSelection extends QSection {
 		return toString("");
 	}
 
-	public String toString(String parentAlias) {
+	@Override
+    public String toString(String parentAlias) {
 		parentAlias = configureAlias(parentAlias);
 		String paramOrExpression = computeFilterOrExpression();
 		return String.format(" AND %s%s " + getComparator(), parentAlias, getItem(), paramOrExpression);
@@ -42,7 +43,7 @@ public class QSelection extends QSection {
 
 	private String computeFilterOrExpression() {
 		if (this.innerQuery != null) {
-			return new HQLFormatter(this.innerQuery).toHql();
+            return new HQLFormatterDTO(this.innerQuery).toHql();
 		}
 
 		return ":" + getAlias();
@@ -50,11 +51,11 @@ public class QSelection extends QSection {
 
 	public void addParameters(QQuery q) {
 		if (this.innerQuery != null) {
-			((QQuery) this.innerQuery).getParameters().forEach((nome, valor) -> {
+			this.innerQuery.getParameters().forEach((nome, valor) -> {
 				q.addParameter(nome, valor);
 			});
 		} else {
-			q.addParameter(alias, value);
+			q.addParameter(this.alias, this.value);
 		}
 	}
 
