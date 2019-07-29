@@ -7,6 +7,7 @@ public enum CompType {
 	LD(" < %s "),
 	LE(" <= %s "),
 	IN(" IN (%s) "),
+    ILIKE(" ILIKE %s "),
 	
 	;
 	

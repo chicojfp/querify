@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.breezil.queryfier.engine.sql.HQLFormatter;
+import io.breezil.queryfier.engine.sql.HQLFormatterDTO;
+import io.breezil.queryfier.engine.sql.HQLFormatterEntity;
 import io.breezil.queryfier.engine.sql.ParamFormatter;
 
 public class QQuery {
@@ -53,14 +54,14 @@ public class QQuery {
         this.selections.add(selection);
     }
     
-	public String toHql() {
-        return new HQLFormatter(this).toString();
+	public String toDTOQuery() {
+        return new HQLFormatterDTO(this).toString();
     }
     
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append(toHql());
+        b.append(toDTOQuery());
         b.append("\n\n\n\n");
         b.append(new ParamFormatter(this).toString());
         b.append("\n");
@@ -80,15 +81,15 @@ public class QQuery {
 	}
 
 	public List<QProjection> getProjections() {
-		return projections;
+		return this.projections;
 	}
 
 	public List<QSelection> getSelections() {
-		return selections;
+		return this.selections;
 	}
 
 	public List<QSort> getSortColumns() {
-		return sortColumns;
+		return this.sortColumns;
 	}
 
 	public void addJoin(QJoin join) {
@@ -99,4 +100,8 @@ public class QQuery {
 		return this.joins;
 	}
 
+    public String toEntityQuery() {
+        return new HQLFormatterEntity(this).toString();
+    }
+    
 }
