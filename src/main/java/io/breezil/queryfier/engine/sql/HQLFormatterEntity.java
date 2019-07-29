@@ -4,12 +4,12 @@ import java.util.stream.Collectors;
 
 import io.breezil.queryfier.engine.QQuery;
 
-public class HQLFormatter {
-	private String query;
+public class HQLFormatterEntity {
+	private final String query;
 	
-	public HQLFormatter(QQuery query) {
+	public HQLFormatterEntity(QQuery query) {
 		StringBuilder b = new StringBuilder();
-        b.append(mapProjections(query));
+        b.append("SELECT " + query.getAlias());
         b.append("\n");
         b.append(getFrom(query));
         b.append("\n");
@@ -31,7 +31,7 @@ public class HQLFormatter {
 	}
 
 	public String toHql() {
-        return query;
+        return this.query;
     }
 	
 	public String mapProjections(QQuery query) {
