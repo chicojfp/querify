@@ -33,11 +33,14 @@ public class QueryBuilder {
 		if (toParse == null) {
 			return null;
 		}
-		Map<String, QField> allAlias2Cols = new HashMap<>();
-
 		QQuery q = new QQuery();
-		Class<? extends Object> classToParse = toParse.getClass();
-		configureAlias(q, classToParse);
+		Map<String, QField> allAlias2Cols = new HashMap<>();
+		
+		Class<? extends QBase> classToParse = toParse.getClass();
+		configureAlias(q, classToParse, toParse);
+		
+		boolean groupBy = ((QBaseClass) toParse).isDistinct();
+		q.setDistinct(groupBy);
 
 		List<QProjection> allProjections = new ArrayList<>();
 		for (Field field : classToParse.getDeclaredFields()) {
@@ -52,12 +55,21 @@ public class QueryBuilder {
 		this.joinMaps = mapAlias2Joins(allAlias2Cols);
 
 		configureProjections(toParse, q, allProjections);
+		
+		configureGrouping(q.getProjections(), q);
 
 		configureSortedColumns(toParse, allAlias2Cols, q);
 
 		configureJoins(q);
 
 		return q;
+	}
+
+	private void configureGrouping(List<QProjection> projections, QQuery q) {
+		boolean isDistinct = q.hasGroupping();
+		if (isDistinct) {
+			projections.stream().filter(p -> p.getGroupFunction() == null).forEach(p -> q.addGroup(p));
+		}
 	}
 
 	private QField getQField(Field f) {
@@ -122,7 +134,7 @@ public class QueryBuilder {
 			q.addJoin(this.joinMaps.get(table));
 		});
 
-		System.out.println(usedJoins);
+//		System.out.println(usedJoins);
 
 	}
 
@@ -195,6 +207,12 @@ public class QueryBuilder {
 			projections.stream().filter(p -> {
 				return toParse.getColumns().contains(p.getAlias());
 			}).forEach(p -> q.addProjection(p));
+			;
+			// Adiciona colunas com agrupamentos
+			toParse.getColumns().<String>stream().filter(col -> ((String)col).contains(QProjection.SPLITTER)).forEach(col -> {
+				q.addProjection(new QProjection((String) col)); 
+				System.out.println("Marcado para group by: " + col);
+			});
 		}
 	}
 
@@ -227,11 +245,13 @@ public class QueryBuilder {
 		return null;
 	}
 
-	private void configureAlias(QQuery q, Class<? extends Object> classToParse) {
+	private void configureAlias(QQuery q, Class<? extends QBase> classToParse, QBase toParse) {
 		if (classToParse.isAnnotationPresent(QEntity.class)) {
 			QEntity n = classToParse.getAnnotation(QEntity.class);
 			q.setAlias(getAlias(n));
 			q.setEntity(n.name());
+		} else {
+			q.setEntity(toParse.recuperarTipoEntidade());
 		}
 	}
 

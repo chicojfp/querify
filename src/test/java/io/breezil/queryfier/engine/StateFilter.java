@@ -6,7 +6,7 @@ import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.entities.State;
 
 @QEntity(name = State.class, alias = "s")
-public class StateFilter extends QBaseClass {
+public class StateFilter extends QBaseClass<State, StateFilter> {
 	String name;
 	String governor;
 	
