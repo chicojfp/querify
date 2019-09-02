@@ -18,12 +18,28 @@ public class HQLFormatterDTO {
         b.append("WHERE 1=1 ");
         b.append("\n");
         b.append(mapSelections(query));
+        if (query.hasGroupping()) {
+	        b.append("\n");
+	        b.append(mapGroupBy(query));
+        }
         b.append("\n");
         b.append(createOrderBy(query));
 
         this.query = b.toString();
 	}
 	
+	private Object mapGroupBy(QQuery query) {
+		StringBuilder b = new StringBuilder();
+    	if (!query.getGroups().isEmpty()) {
+			b.append(" GROUP BY ");
+			b.append(query.getGroups().stream()
+				.map(g -> g.toStringWithoutAlias(query.getAlias()))
+				.collect(Collectors.joining(",\n          "))
+			);
+		}
+    	return b.toString();
+	}
+
 	private String getJoins(QQuery query) {
 		return query.getJoins().stream()
 	        	.map(p -> p.toString(query.getAlias()))

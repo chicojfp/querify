@@ -10,17 +10,20 @@ import io.breezil.queryfier.engine.sql.HQLFormatterEntity;
 import io.breezil.queryfier.engine.sql.ParamFormatter;
 
 public class QQuery {
-    private final List<QProjection> projections;
+	private final List<QProjection> projections;
+	private final List<QProjection> groups;
     private final List<QSelection> selections;
     private final List<QSort> sortColumns;
     private final Map<String, Object> parameters;
     private final List<QJoin> joins;
     private Class<? extends Object> entity;
     private String alias;
+	private boolean groupedBy;
     
     public QQuery() {
     	this.parameters = new HashMap<>();
-        this.projections = new ArrayList<>();
+    	this.projections = new ArrayList<>();
+    	this.groups = new ArrayList<>();
         this.selections = new ArrayList<>();
         this.sortColumns = new ArrayList<>();
         this.joins = new ArrayList<>();
@@ -74,6 +77,11 @@ public class QQuery {
     
     public void addProjection(QProjection proj) {
         this.projections.add(proj);
+        this.groupedBy = this.groupedBy || proj.hasAggregation();
+    }
+    
+    public void addGroup(QProjection proj) {
+        this.groups.add(proj);
     }
 
 	public void addSortColumns(List<QSort> sortedColumns) {
@@ -103,5 +111,17 @@ public class QQuery {
     public String toEntityQuery() {
         return new HQLFormatterEntity(this).toString();
     }
-    
+
+	public List<QProjection> getGroups() {
+		return groups;
+	}
+
+	public void setDistinct(boolean distinct) {
+		this.groupedBy = distinct;		
+	}
+
+	public boolean hasGroupping() {
+		return this.groupedBy;
+	}
+
 }

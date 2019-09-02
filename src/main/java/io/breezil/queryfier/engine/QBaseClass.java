@@ -1,17 +1,22 @@
 package io.breezil.queryfier.engine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery {
+public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery, QStatisticsMap {
     private final Set<String> columns;
     private final List<String> sortedColumns;
+    private final Map<String, Object> aggregs;
+    private boolean distinct;
     
     public QBaseClass() {
         this.columns = new HashSet<>();
         this.sortedColumns = new ArrayList<>();
+        this.aggregs = new HashMap<>();
     }
     
     public void addColumns(String... columnNames) {
@@ -49,5 +54,18 @@ public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery {
 			this.sortedColumns.add(name);
 		}
 	}
-    
+
+	public boolean isDistinct() {
+		return distinct;
+	}
+
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
+	}
+
+	@Override
+	public Map<String, Object> getStats() {
+		return this.aggregs;
+	}
+	
 }

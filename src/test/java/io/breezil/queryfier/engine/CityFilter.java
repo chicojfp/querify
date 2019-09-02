@@ -1,11 +1,12 @@
 package io.breezil.queryfier.engine;
 
-import io.breezil.queryfier.engine.annotations.QEntity;
 import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.entities.City;
 
-@QEntity(name = City.class, alias = "c")
-public class CityFilter extends QBaseClass {
+//@QEntity(name = City.class, alias = "c")
+public class CityFilter extends QBaseClass<City, CityFilter> {
+	private static final long serialVersionUID = 1543673095346863136L;
+	
 	String name;
 	@QField(name="major.name")
 	String major;

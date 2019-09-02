@@ -29,15 +29,19 @@ public class QueryBuilder {
 		this.joinMaps = new HashMap<>();
 	}
 
-	public QQuery parseQuery(QBase toParse) throws IllegalAccessException {
+	@SuppressWarnings("rawtypes")
+	public QQuery parseQuery(QBase<? extends Object, ? extends Object> toParse) throws IllegalAccessException {
 		if (toParse == null) {
 			return null;
 		}
-		Map<String, QField> allAlias2Cols = new HashMap<>();
-
 		QQuery q = new QQuery();
-		Class<? extends Object> classToParse = toParse.getClass();
-		configureAlias(q, classToParse);
+		Map<String, QField> allAlias2Cols = new HashMap<>();
+		
+		Class<? extends QBase> classToParse = toParse.getClass();
+		configureAlias(q, classToParse, toParse);
+		
+		boolean groupBy = ((QBaseClass) toParse).isDistinct();
+		q.setDistinct(groupBy);
 
 		List<QProjection> allProjections = new ArrayList<>();
 		for (Field field : classToParse.getDeclaredFields()) {
@@ -52,12 +56,21 @@ public class QueryBuilder {
 		this.joinMaps = mapAlias2Joins(allAlias2Cols);
 
 		configureProjections(toParse, q, allProjections);
+		
+		configureGrouping(q.getProjections(), q);
 
 		configureSortedColumns(toParse, allAlias2Cols, q);
 
 		configureJoins(q);
 
 		return q;
+	}
+
+	private void configureGrouping(List<QProjection> projections, QQuery q) {
+		boolean isDistinct = q.hasGroupping();
+		if (isDistinct) {
+			projections.stream().filter(p -> p.getGroupFunction() == null).forEach(p -> q.addGroup(p));
+		}
 	}
 
 	private QField getQField(Field f) {
@@ -122,7 +135,7 @@ public class QueryBuilder {
 			q.addJoin(this.joinMaps.get(table));
 		});
 
-		System.out.println(usedJoins);
+//		System.out.println(usedJoins);
 
 	}
 
@@ -159,7 +172,7 @@ public class QueryBuilder {
 		return joinAlias;
 	}
 
-	private void configureSortedColumns(QBase toParse, Map<String, QField> columnAlias, QQuery q) {
+	private void configureSortedColumns(QBase<? extends Object, ? extends Object> toParse, Map<String, QField> columnAlias, QQuery q) {
 		if (toParse instanceof QSortableQuery) {
 			List<String> sortedAlias = ((QSortableQuery) toParse).getSortedColumns();
 			sortedAlias = mapAlias2ActualNames(columnAlias, sortedAlias);
@@ -188,17 +201,30 @@ public class QueryBuilder {
 		}).collect(Collectors.toList());
 	}
 
-	private void configureProjections(QBase toParse, QQuery q, List<QProjection> projections) {
+	private void configureProjections(QBase<? extends Object, ? extends Object> toParse, QQuery q, List<QProjection> projections) {
 		if (toParse.getColumns().isEmpty()) {
 			projections.forEach(p -> q.addProjection(p));
 		} else {
-			projections.stream().filter(p -> {
-				return toParse.getColumns().contains(p.getAlias());
-			}).forEach(p -> q.addProjection(p));
+			addColumnsWithProjections(toParse, q, projections);
+			addColumnsWithAggregationFunctions(toParse, q);
 		}
 	}
 
-	private void configureSelectionAndParameter(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
+	private void addColumnsWithAggregationFunctions(QBase<? extends Object, ? extends Object> toParse, QQuery q) {
+		toParse.getColumns().stream()
+			.filter(col -> col.contains(QProjection.SPLITTER))
+			.forEach(col -> {
+				q.addProjection(new QProjection(col)); 
+		});
+	}
+
+	private void addColumnsWithProjections(QBase<? extends Object, ? extends Object> toParse, QQuery q, List<QProjection> projections) {
+		projections.stream().filter(p -> {
+			return toParse.getColumns().contains(p.getAlias());
+		}).forEach(p -> q.addProjection(p));
+	}
+
+	private void configureSelectionAndParameter(QBase<? extends Object, ? extends Object> toParse, QQuery q, Field f) throws IllegalAccessException {
 		f.setAccessible(true);
 		Object fieldValue = f.get(toParse);
 		if ((fieldValue != null) && isNonEmptyList(fieldValue)) {
@@ -213,13 +239,13 @@ public class QueryBuilder {
 				|| ((fieldValue instanceof Collection<?>) && !((Collection<?>) fieldValue).isEmpty());
 	}
 
-	private QSelection createSelection(QBase toParse, QQuery q, Field f) throws IllegalAccessException {
+	private QSelection createSelection(QBase<? extends Object, ? extends Object> toParse, QQuery q, Field f) throws IllegalAccessException {
 		String columnName = getColumnName(f);
 		QQuery query = createSubquery(toParse, f);
 		return new QSelection(columnName, f.getName(), getComparator(f), f.get(toParse), query);
 	}
 
-	private QQuery createSubquery(QBase toParse, Field f) throws IllegalAccessException {
+	private QQuery createSubquery(QBase<? extends Object, ? extends Object> toParse, Field f) throws IllegalAccessException {
 		QFieldQuery q = f.getAnnotation(QFieldQuery.class);
 		if (q != null) {
 			return new QueryBuilder().parseQuery((QBase) f.get(toParse));
@@ -227,11 +253,14 @@ public class QueryBuilder {
 		return null;
 	}
 
-	private void configureAlias(QQuery q, Class<? extends Object> classToParse) {
+	private void configureAlias(QQuery q, Class<? extends QBase> classToParse, QBase<? extends Object, ? extends Object> toParse) {
 		if (classToParse.isAnnotationPresent(QEntity.class)) {
 			QEntity n = classToParse.getAnnotation(QEntity.class);
 			q.setAlias(getAlias(n));
 			q.setEntity(n.name());
+		} else {
+			q.setEntity(toParse.recuperarTipoEntidade());
+			q.setAlias(toParse.recuperarTipoEntidade().getSimpleName().substring(0,1));
 		}
 	}
 
