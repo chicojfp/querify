@@ -28,6 +28,13 @@ public class QueryBuilder {
 	public QueryBuilder() {
 		this.joinMaps = new HashMap<>();
 	}
+    
+    private void validateColumns(QBase<? extends Object, ? extends Object> toParse, QQuery q) {
+        if (toParse.getColumns().size() != q.getProjections().size()) {
+            throw new IllegalArgumentException(
+                    "Some column(s): " + toParse.getColumns() + " do not belong to the entity you requested.");
+        }
+    }
 
 	@SuppressWarnings("rawtypes")
 	public QQuery parseQuery(QBase<? extends Object, ? extends Object> toParse) throws IllegalAccessException {
@@ -203,25 +210,22 @@ public class QueryBuilder {
 
 	private void configureProjections(QBase<? extends Object, ? extends Object> toParse, QQuery q, List<QProjection> projections) {
 		if (toParse.getColumns().isEmpty()) {
-			projections.forEach(p -> q.addProjection(p));
+			projections.forEach(q::addProjection);
 		} else {
 			addColumnsWithProjections(toParse, q, projections);
 			addColumnsWithAggregationFunctions(toParse, q);
+            validateColumns(toParse, q);
 		}
 	}
 
 	private void addColumnsWithAggregationFunctions(QBase<? extends Object, ? extends Object> toParse, QQuery q) {
 		toParse.getColumns().stream()
 			.filter(col -> col.contains(QProjection.SPLITTER))
-			.forEach(col -> {
-				q.addProjection(new QProjection(col)); 
-		});
+                .forEach(col -> q.addProjection(new QProjection(col)));
 	}
 
 	private void addColumnsWithProjections(QBase<? extends Object, ? extends Object> toParse, QQuery q, List<QProjection> projections) {
-		projections.stream().filter(p -> {
-			return toParse.getColumns().contains(p.getAlias());
-		}).forEach(p -> q.addProjection(p));
+        projections.stream().filter(p -> toParse.getColumns().contains(p.getAlias())).forEach(q::addProjection);
 	}
 
 	private void configureSelectionAndParameter(QBase<? extends Object, ? extends Object> toParse, QQuery q, Field f) throws IllegalAccessException {
