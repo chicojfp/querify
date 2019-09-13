@@ -53,6 +53,14 @@ public class QueryBuilderTest {
 				NUMBER_OF_QUERIED_PROJECTIONS, q.getProjections().size());
 	}
 	
+	@Test(expected = IllegalArgumentException.class)
+    public void shoudFailWithWrongColumns() {
+        sf.addColumn("main");        
+        sf.addColumn("president");
+        QQuery q = convertDTO2Query(sf);
+        Assert.fail("president does not belong to StateFilter. It should fail then");
+    }
+	
 	@Test
 	public void deveOrdenarAscendentemente() {
 		sf.addSortedColumns("governor");
