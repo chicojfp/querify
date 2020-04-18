@@ -20,7 +20,7 @@ public class QProjection extends QSection {
 		if (item.contains(SPLITTER)) {
 			String[] funcItem = item.split(SPLITTER);
 			this.groupFunction = AggregationFunctionEnum.parse(funcItem[0]);
-			this.item = funcItem[1];
+			this.item = this.alias;
 			this.alias = item.replace(SPLITTER, "_");
 		}
 //		this.groupedBy = (this.groupFunction == null);

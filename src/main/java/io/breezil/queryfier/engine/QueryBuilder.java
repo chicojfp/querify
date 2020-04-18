@@ -17,6 +17,7 @@ import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.engine.annotations.QFieldQuery;
 import io.breezil.queryfier.engine.enums.CompType;
 import io.breezil.queryfier.engine.enums.JoinType;
+import io.breezil.queryfier.engine.util.QReflectionUtil;
 
 public class QueryBuilder {
 
@@ -55,7 +56,7 @@ public class QueryBuilder {
 
 		this.joinMaps = mapAlias2Joins(allAlias2Cols);
 
-		configureProjections(toParse, q, allProjections);
+		configureProjections(toParse, q, allProjections, allAlias2Cols);
 		
 		configureGrouping(q.getProjections(), q);
 
@@ -201,20 +202,20 @@ public class QueryBuilder {
 		}).collect(Collectors.toList());
 	}
 
-	private void configureProjections(QBase<? extends Object, ? extends Object> toParse, QQuery q, List<QProjection> projections) {
+	private void configureProjections(QBase<? extends Object, ? extends Object> toParse, QQuery q, List<QProjection> projections, Map<String, QField> allAlias2Cols) {
 		if (toParse.getColumns().isEmpty()) {
 			projections.forEach(p -> q.addProjection(p));
 		} else {
 			addColumnsWithProjections(toParse, q, projections);
-			addColumnsWithAggregationFunctions(toParse, q);
+			addColumnsWithAggregationFunctions(toParse, q, allAlias2Cols);
 		}
 	}
 
-	private void addColumnsWithAggregationFunctions(QBase<? extends Object, ? extends Object> toParse, QQuery q) {
+	private void addColumnsWithAggregationFunctions(QBase<? extends Object, ? extends Object> toParse, QQuery q, Map<String, QField> allAlias2Cols) {
 		toParse.getColumns().stream()
 			.filter(col -> col.contains(QProjection.SPLITTER))
 			.forEach(col -> {
-				q.addProjection(new QProjection(col)); 
+				q.addProjection(new QProjection(col, allAlias2Cols.get(col.split(QProjection.SPLITTER)[1]).name())); 
 		});
 	}
 
@@ -227,16 +228,11 @@ public class QueryBuilder {
 	private void configureSelectionAndParameter(QBase<? extends Object, ? extends Object> toParse, QQuery q, Field f) throws IllegalAccessException {
 		f.setAccessible(true);
 		Object fieldValue = f.get(toParse);
-		if ((fieldValue != null) && isNonEmptyList(fieldValue)) {
+		if ((fieldValue != null) && QReflectionUtil.isNonEmptyList(fieldValue)) {
 			QSelection selection = createSelection(toParse, q, f);
 			q.addSelection(selection);
 			selection.addParameters(q);
 		}
-	}
-
-	private boolean isNonEmptyList(Object fieldValue) {
-		return (!(fieldValue instanceof Collection<?>))
-				|| ((fieldValue instanceof Collection<?>) && !((Collection<?>) fieldValue).isEmpty());
 	}
 
 	private QSelection createSelection(QBase<? extends Object, ? extends Object> toParse, QQuery q, Field f) throws IllegalAccessException {
