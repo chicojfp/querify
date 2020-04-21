@@ -9,13 +9,13 @@ public interface QBase<E, D> {
     
     public void addColumn(String columnName);
     
-    default Class<E> recuperarTipoEntidade() {
+    default Class<E> getSourceType() {
         Type genericSuperclass = getClass().getGenericSuperclass();
         ParameterizedType parameterizedType = ParameterizedType.class.cast(genericSuperclass);
         return (Class<E>) parameterizedType.getActualTypeArguments()[0];
     }
     
-    default Class<D> recuperarTipoDTO() {
+    default Class<D> getDestinationType() {
         Type genericSuperclass = getClass().getGenericSuperclass();
         ParameterizedType parameterizedType = ParameterizedType.class.cast(genericSuperclass);
         return (Class<D>) parameterizedType.getActualTypeArguments()[1];

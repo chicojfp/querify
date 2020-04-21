@@ -1,12 +1,16 @@
 package io.breezil.queryfier.engine.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import io.breezil.queryfier.engine.QBaseClass;
 import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.engine.enums.CompType;
 import io.breezil.queryfier.engine.enums.JoinType;
@@ -89,6 +93,61 @@ public class QReflectionUtil {
 		}
 		return q;
 
+	}
+	
+	public static <T> Method getSetterMethod(T entidade, String from) {
+		String methodName = "set" + from.substring(0, 1).toUpperCase() + from.split("\\.")[0].substring(1);
+		Method method = null;
+		for (Method m : entidade.getClass().getMethods()) {
+			if (m.getName().equals(methodName)) {
+				method = m;
+				break;
+			}
+		}
+		return method;
+	}
+	
+	public static <T> Class<? extends Object> getPropertyType(T entity, String jsonPatchFrom) {
+		return getSetterValueType(getSetterMethod(entity, jsonPatchFrom));
+	}
+	
+	public static Class<? extends Object> getSetterValueType(Method method) {
+		Class<? extends Object> clazz =  method.getParameterTypes()[0];
+		return clazz;
+	}
+	
+	public static void callSetterWithParameter(Object entidade, String methodName, Object value) {
+		Method method = getSetterMethod(entidade, methodName);
+		callMethodWithParameter(entidade, method, value);
+	}
+
+	public static <T> void callMethodWithParameter(T entidade, Method method, Object value) {
+		try {
+			method.invoke(entidade, value);
+		} catch (SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static <D, T> T createNewInstanceFromEntity(QBaseClass<T, D> filtro) {
+		T entity = null;
+		try {
+			Constructor<T> entityConst;
+			entityConst = filtro.getSourceType().getConstructor();
+			entity = entityConst.newInstance();
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
+		}
+		return entity;
+	}
+	
+	public static Object createNewInstance(Class<? extends Object> clazz) {
+		try {
+			return clazz.newInstance();
+		} catch (SecurityException | InstantiationException | IllegalAccessException
+				| IllegalArgumentException e) {
+		}
+		return null;
 	}
 
 }

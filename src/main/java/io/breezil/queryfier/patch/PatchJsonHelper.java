@@ -1,4 +1,4 @@
-package io.breezil.queryfier.util;
+package io.breezil.queryfier.patch;
 
 import java.lang.reflect.Method;
 import java.time.LocalDate;
@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import io.breezil.queryfier.dao.GeneralDao;
 import io.breezil.queryfier.engine.QBaseClass;
 import io.breezil.queryfier.engine.util.QReflectionUtil;
-import io.breezil.queryfier.patch.JSonPatchOp;
 import io.breezil.queryfier.serializer.ISerializer;
 
 public class PatchJsonHelper {
@@ -41,19 +40,19 @@ public class PatchJsonHelper {
 		return entity;
 	}
 
-	private  <T> void applyPatchOp(T entidade, JSonPatchOp opp) {
+	private  <T> void applyPatchOp(T entity, JSonPatchOp opp) {
 		String from = opp.getFrom().substring(1);
-		Method method = ReflectionUtil.getSetterMethod(entidade, from);
+		Method method = QReflectionUtil.getSetterMethod(entity, from);
 		// FIXME Não deveria precisar desta verificação, detectar a causa.
 		if (method != null) {
 			Object value = mapPatchValue2Type(opp, method);
-			ReflectionUtil.callMethodWithParameter(entidade, method, value);
+			QReflectionUtil.callMethodWithParameter(entity, method, value);
 		}
 	}
 
 	private  Object mapPatchValue2Type(JSonPatchOp opp, Method method) {
 		if (isAddPatch(opp)) {
-			return mapPatchValue2ActualType(opp, ReflectionUtil.getSetterValueType(method));
+			return mapPatchValue2ActualType(opp, QReflectionUtil.getSetterValueType(method));
 		}
 		// FIXME: Operação "remove" as demais precisam ser implementadas
 		return null;
@@ -67,8 +66,12 @@ public class PatchJsonHelper {
 		Object valueToParse = opp.getPatch();
 		if (clazz.isAssignableFrom(LocalDate.class)) {
 			return this.getDeserializer().serialize(clazz, opp.getPatch().toString());
+		} else if (clazz.isAssignableFrom(Integer.class)) {
+			return Integer.parseInt(opp.getPatch().toString());
+		} else if (clazz.isAssignableFrom(Long.class)) {
+			return Long.parseLong(opp.getPatch().toString());
 		} else if (!clazz.getPackage().getName().startsWith("java")) {
-			Object value = ReflectionUtil.createNewInstance(clazz);
+			Object value = QReflectionUtil.createNewInstance(clazz);
 			return processEntityProperty(opp, value);
 		}
 		return valueToParse;
@@ -77,9 +80,9 @@ public class PatchJsonHelper {
 	private  Object processEntityProperty(JSonPatchOp opp, Object value) {
 		if (isFieldFromOtherEntity(opp)) {
 			String propertyName = getEntityFieldName(opp);
-			Method innerMethod = ReflectionUtil.getSetterMethod(value, propertyName);
-			Object innerValue = mapPatchValue2ActualType(opp, ReflectionUtil.getSetterValueType(innerMethod));
-			ReflectionUtil.callMethodWithParameter(value, innerMethod, innerValue);
+			Method innerMethod = QReflectionUtil.getSetterMethod(value, propertyName);
+			Object innerValue = mapPatchValue2ActualType(opp, QReflectionUtil.getSetterValueType(innerMethod));
+			QReflectionUtil.callMethodWithParameter(value, innerMethod, innerValue);
 			return this.getDao().getReference(value.getClass(), innerValue);
 		}
 		return value;
@@ -102,9 +105,9 @@ public class PatchJsonHelper {
 		return ops;
 	}
 
-	public  <D, T> List<JSonPatchOp> mapFilterFields2ActualEntityFields(QBaseClass<T, D> filtro,
+	public  <D, T> List<JSonPatchOp> mapFilterFields2ActualEntityFields(QBaseClass<T, D> filter,
 			List<JSonPatchOp> ops) {
-		Map<String, String> fieldMaps = QReflectionUtil.mapField2QFieldName(filtro.getClass());
+		Map<String, String> fieldMaps = QReflectionUtil.mapField2QFieldName(filter.getClass());
 		return ops.stream().filter(op -> fieldMaps.get(op.getFrom().substring(1)) != null).map(op -> {
 			return new JSonPatchOp(op.getOp(), JSON_PATCH_PREFIX + fieldMaps.get(op.getFrom().substring(1)),
 					op.getPatch());

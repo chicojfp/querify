@@ -4,7 +4,7 @@ import io.breezil.queryfier.engine.annotations.QField;
 import io.breezil.queryfier.entities.City;
 
 //@QEntity(name = City.class, alias = "c")
-public class CityFilter extends QBaseClass<City, CityFilter> {
+public class CityFilterTest extends QBaseClass<City, CityFilterTest> {
 	private static final long serialVersionUID = 1543673095346863136L;
 	
 	String name;
@@ -16,7 +16,7 @@ public class CityFilter extends QBaseClass<City, CityFilter> {
 	@QField(name="state.name")
 	String state;
 	
-	public CityFilter() {
+	public CityFilterTest() {
 		super();
 	}
 	

@@ -255,8 +255,8 @@ public class QueryBuilder {
 			q.setAlias(getAlias(n));
 			q.setEntity(n.name());
 		} else {
-			q.setEntity(toParse.recuperarTipoEntidade());
-			q.setAlias(toParse.recuperarTipoEntidade().getSimpleName().substring(0,1));
+			q.setEntity(toParse.getSourceType());
+			q.setAlias(toParse.getSourceType().getSimpleName().substring(0,1));
 		}
 	}
 

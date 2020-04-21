@@ -5,11 +5,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.breezil.queryfier.engine.QQuery;
-import io.breezil.queryfier.engine.StateFilter;
+import io.breezil.queryfier.engine.StateFilterTest;
 
 public class QueryBuilderTest {
-	private StateFilter sf;
-	private int NUMBER_OF_TOTAL_PROJECTIONS = 4;
+	private StateFilterTest sf;
+	private int NUMBER_OF_TOTAL_PROJECTIONS = 5;
 	private int NUMBER_OF_QUERIED_PROJECTIONS = 1;
 	private int ONE_SORTED_COLUNM = 1;
 	private int TWO_SORTED_COLUNM = 2;
@@ -31,7 +31,7 @@ public class QueryBuilderTest {
 	
 	@Before
 	public void configura() {
-		sf = new StateFilter();
+		sf = new StateFilterTest();
 		sf.setCountry(BRASIL);
 		sf.setGovernor("Manoel Bandeira");
 		sf.setMain("Louca da Espanha");
@@ -106,7 +106,7 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void deveFiltrarPorColunasNaoNulas() {
-		StateFilter sf = new StateFilter();
+		StateFilterTest sf = new StateFilterTest();
 		QQuery q = convertDTO2Query(sf);
 		
 		Assert.assertEquals("Não deve haver projeções com valores nulos.",
@@ -133,7 +133,7 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void deveSuportarConsultasComDistinctEmColunaEspecifica() {
-		StateFilter sf = new StateFilter();
+		StateFilterTest sf = new StateFilterTest();
 		sf.setCountry(BRASIL);
 		sf.addColumn(STATE_FIELD_NAME);
 		sf.setDistinct(true);
@@ -149,9 +149,9 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void deveAgruparDemaisColunasSemAgregacao() {
-		StateFilter sf = new StateFilter();
+		StateFilterTest sf = new StateFilterTest();
 		sf.setCountry(BRASIL);
-		sf.addColumns("count@city", "sum@population");
+		sf.addColumns("count@main", "sum@population");
 		sf.addColumns(COUNTRY_COLUMN_ALIAS, STATE_FIELD_NAME);
 		
 		QQuery q = convertDTO2Query(sf);
@@ -164,9 +164,9 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void deveAgruparColunasSemAgregacao() {
-		StateFilter sf = new StateFilter();
+		StateFilterTest sf = new StateFilterTest();
 		sf.setCountry(BRASIL);
-		sf.addColumn("count@city");
+		sf.addColumn("count@name");
 		sf.addColumns(STATE_FIELD_NAME);
 		
 		QQuery q = convertDTO2Query(sf);
@@ -180,7 +180,7 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void deveSuportarConsultasComDistinct() {
-		StateFilter sf = new StateFilter();
+		StateFilterTest sf = new StateFilterTest();
 		sf.setCountry(BRASIL);
 		sf.addColumns(STATE_FIELD_NAME, "main");
 		sf.setDistinct(true);
@@ -193,7 +193,7 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void testarAParada() {
-		StateFilter sf = new StateFilter();
+		StateFilterTest sf = new StateFilterTest();
 		sf.setCountry(BRASIL);
 		sf.setGovernor("Manoel Bandeira");
 		sf.setMain("Louca da Espanha");
@@ -209,7 +209,7 @@ public class QueryBuilderTest {
 		System.out.println(q);
 	}
 
-	private QQuery convertDTO2Query(StateFilter sf) {
+	private QQuery convertDTO2Query(StateFilterTest sf) {
 		QQuery q = null;
 		try {
 			q = new QueryBuilder().parseQuery(sf);
@@ -221,7 +221,7 @@ public class QueryBuilderTest {
 	
 	@Test
 	public void consultarEntidadesPais() {
-		CityFilter sf = new CityFilter();
+		CityFilterTest sf = new CityFilterTest();
 		sf.setCountry(BRASIL);
 		sf.setState("PE");
         sf.setMajor("Lima Barreto");

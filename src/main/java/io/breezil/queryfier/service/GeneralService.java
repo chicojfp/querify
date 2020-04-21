@@ -4,9 +4,9 @@ import java.util.List;
 
 import io.breezil.queryfier.dao.GeneralDao;
 import io.breezil.queryfier.engine.QBaseClass;
+import io.breezil.queryfier.engine.util.QReflectionUtil;
 import io.breezil.queryfier.patch.JSonPatchOp;
-import io.breezil.queryfier.util.PatchJsonHelper;
-import io.breezil.queryfier.util.ReflectionUtil;
+import io.breezil.queryfier.patch.PatchJsonHelper;
 
 public class GeneralService<T> {
 
@@ -18,53 +18,53 @@ public class GeneralService<T> {
 		return null;
 	}
 
-	public <D> List<D> searchDTOs(QBaseClass<T, D> filtro) {
-		return this.getDao().searchDTOs(filtro);
+	public <D> List<D> searchDTOs(QBaseClass<T, D> filter) {
+		return this.getDao().searchDTOs(filter);
 	}
 
-	public <D> List<T> searchEntities(QBaseClass<T, D> filtro) {
-		return this.getDao().searchEntities(filtro);
+	public <D> List<T> searchEntities(QBaseClass<T, D> filter) {
+		return this.getDao().searchEntities(filter);
 	}
 
-	public <D> D updateModel(QBaseClass<T, D> filtro, List<JSonPatchOp> ops) {
-		ops = this.getPatchParser().mapFilterFields2ActualEntityFields(filtro, ops);
-		ops = preUpdatePatch(ops);
-		T entity = this.getDao().searchEntity(filtro);
-		entity = preFilledEntity(entity);
+	public <D> D updateModel(QBaseClass<T, D> filter, List<JSonPatchOp> ops) {
+		ops = this.getPatchParser().mapFilterFields2ActualEntityFields(filter, ops);
+		ops = filter.preUpdatePatch(ops);
+		T entity = this.getDao().searchEntity(filter);
+		entity = filter.preFilledEntity(entity);
 		entity = this.getPatchParser().applyPatch(entity, ops);
-		entity = preUpdateEntity(entity);
+		entity = filter.preUpdateEntity(entity);
 		this.getDao().update(entity);
-		postUpdateEntity(entity);
-		return this.getDao().searchDTO(filtro);
+		filter.postUpdateEntity(entity);
+		return this.getDao().searchDTO(filter);
 	}
 
-	public <D> D updateFullModel(QBaseClass<T, D> filtro, D dados) {
-		List<JSonPatchOp> ops = this.getPatchParser().convertFieldValues2PatchJsonOp(dados);
-		ops = preUpdatePatch(ops);
-		T entity = this.getDao().searchEntity(filtro);
-		entity = preFilledEntity(entity);
-		udpateEntityFields(filtro, ops, entity);
-		entity = preUpdateEntity(entity);
+	public <D> D updateFullModel(QBaseClass<T, D> filter, D data) {
+		List<JSonPatchOp> ops = this.getPatchParser().convertFieldValues2PatchJsonOp(data);
+		ops = filter.preUpdatePatch(ops);
+		T entity = this.getDao().searchEntity(filter);
+		entity = filter.preFilledEntity(entity);
+		udpateEntityFields(filter, ops, entity);
+		entity = filter.preUpdateEntity(entity);
 		this.getDao().persistOrUpdate(entity);
-		postUpdateEntity(entity);
-		return this.getDao().searchDTO(filtro);
+		filter.postUpdateEntity(entity);
+		return this.getDao().searchDTO(filter);
 	}
 
 	public <D> D createModel(QBaseClass<T, D> filter, D data) {
 		List<JSonPatchOp> ops = this.getPatchParser().convertFieldValues2PatchJsonOp(data);
-		ops = preUpdatePatch(ops);
-		T entity = ReflectionUtil.createNewInstanceFromEntity(filter);
-		entity = preFilledEntity(entity);
+		ops = filter.preUpdatePatch(ops);
+		T entity = QReflectionUtil.createNewInstanceFromEntity(filter);
+		entity = filter.preFilledEntity(entity);
 		udpateEntityFields(filter, ops, entity);
-		entity = prePersistEntity(entity);
+		entity = filter.prePersistEntity(entity);
 		this.getDao().persist(entity);
-		postPersistEntity(entity);
+		filter.postPersistEntity(entity);
 		return this.getDao().searchDTO(filter);
 	}
 
-	public <D> void deleteModel(QBaseClass<T, D> filtro) {
-		T entity = this.getDao().searchEntity(filtro);
-		entity = preDeleteEntity(entity);
+	public <D> void deleteModel(QBaseClass<T, D> filter) {
+		T entity = this.getDao().searchEntity(filter);
+		entity = filter.preDeleteEntity(entity);
 		this.getDao().delete(entity);
 	}
 
@@ -73,31 +73,4 @@ public class GeneralService<T> {
 		entity = this.getPatchParser().applyPatch(entity, mapped);
 	}
 	
-	public void postUpdateEntity(T entity) {
-
-	}
-
-	public void postPersistEntity(T entity) {
-
-	}
-
-	public T preUpdateEntity(T entity) {
-		return entity;
-	}
-	
-	public T prePersistEntity(T entity) {
-		return entity;
-	}
-
-	public T preFilledEntity(T entity) {
-		return entity;
-	}
-	
-	public T preDeleteEntity(T entity) {
-		return entity;
-	}
-
-	public List<JSonPatchOp> preUpdatePatch(List<JSonPatchOp> ops) {
-		return ops;
-	}
 }

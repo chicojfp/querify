@@ -5,7 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery {
+import io.breezil.queryfier.patch.JSonPatchOp;
+
+public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery, QDataController<E, D> {
     private final Set<String> columns;
     private final List<String> sortedColumns;
     private boolean distinct;
@@ -29,6 +31,12 @@ public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery {
     @Override
     public void addColumn(String columnNames) {
         this.columns.add(columnNames);
+    }
+    
+    
+    public void setColumns(List<String> columns) {
+    	this.columns.clear();
+    	this.columns.addAll(columns);
     }
 
 	@Override
@@ -57,6 +65,34 @@ public class QBaseClass<E, D> implements QBase<E, D>, QSortableQuery {
 
 	public void setDistinct(boolean distinct) {
 		this.distinct = distinct;
+	}
+	
+	public void postUpdateEntity(E entity) {
+
+	}
+
+	public void postPersistEntity(E entity) {
+
+	}
+
+	public E preUpdateEntity(E entity) {
+		return entity;
+	}
+	
+	public E prePersistEntity(E entity) {
+		return entity;
+	}
+
+	public E preFilledEntity(E entity) {
+		return entity;
+	}
+	
+	public E preDeleteEntity(E entity) {
+		return entity;
+	}
+
+	public List<JSonPatchOp> preUpdatePatch(List<JSonPatchOp> ops) {
+		return ops;
 	}
 
 }
