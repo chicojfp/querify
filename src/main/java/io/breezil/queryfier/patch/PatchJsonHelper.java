@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.sun.xml.txw2.output.StreamSerializer;
 
 import io.breezil.queryfier.dao.GeneralDao;
 import io.breezil.queryfier.engine.QBaseClass;
@@ -62,34 +65,12 @@ public class PatchJsonHelper {
 		return opp.getOp().contentEquals("add");
 	}
 
-	private  Object mapPatchValue2ActualType(JSonPatchOp opp, Class<? extends Object> clazz) {
-		Object valueToParse = opp.getPatch();
-		if (clazz.isAssignableFrom(LocalDate.class)) {
-			return this.getDeserializer().serialize(clazz, opp.getPatch().toString());
-		} else if (clazz.isAssignableFrom(Integer.class)) {
-			return Integer.parseInt(opp.getPatch().toString());
-		} else if (clazz.isAssignableFrom(Long.class)) {
-			return Long.parseLong(opp.getPatch().toString());
-		} else if (!clazz.getPackage().getName().startsWith("java")) {
-			Object value = QReflectionUtil.createNewInstance(clazz);
-			return processEntityProperty(opp, value);
-		}
-		return valueToParse;
-	}
-
-	private  Object processEntityProperty(JSonPatchOp opp, Object value) {
+	private Object mapPatchValue2ActualType(JSonPatchOp opp, Class<? extends Object> clazz) {
+		String paramValue = opp.getPatch().toString();
 		if (isFieldFromOtherEntity(opp)) {
-			String propertyName = getEntityFieldName(opp);
-			Method innerMethod = QReflectionUtil.getSetterMethod(value, propertyName);
-			Object innerValue = mapPatchValue2ActualType(opp, QReflectionUtil.getSetterValueType(innerMethod));
-			QReflectionUtil.callMethodWithParameter(value, innerMethod, innerValue);
-			return this.getDao().getReference(value.getClass(), innerValue);
+			paramValue = buildJson(opp.getFrom().split("\\."), paramValue, 1);
 		}
-		return value;
-	}
-
-	private  String getEntityFieldName(JSonPatchOp opp) {
-		return opp.getFrom().split(PROPERTY_SPLITTER_REGEX)[1];
+		return this.getDeserializer().deserialize(clazz, paramValue);
 	}
 
 	private  boolean isFieldFromOtherEntity(JSonPatchOp opp) {
@@ -112,6 +93,14 @@ public class PatchJsonHelper {
 			return new JSonPatchOp(op.getOp(), JSON_PATCH_PREFIX + fieldMaps.get(op.getFrom().substring(1)),
 					op.getPatch());
 		}).collect(Collectors.toList());
+	}
+
+	private String buildJson(String[] split, String value, int i) {
+		if (i < split.length) {
+			String json = buildJson(split, value, i + 1);
+			return String.format("{\"%s\": %s }", split[i], json);
+		}
+		return "\"" + value + "\"";
 	}
 
 }

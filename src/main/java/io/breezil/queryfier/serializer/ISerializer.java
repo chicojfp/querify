@@ -1,14 +1,19 @@
 package io.breezil.queryfier.serializer;
 
-import java.time.LocalDate;
-
 public interface ISerializer {
 	
-	default public <T> T serialize(Class<T> clazz, String value) {
-		if (clazz.isAssignableFrom(LocalDate.class)) {
-			return (T) LocalDate.parse(value);
+	default public <T> String serialize(Class<T> clazz, String value) {
+		if (value != null) {
+			return value.toString();
 		}
-		return (T) value;
+		return null;
+	}
+
+	public default <T> T deserialize(Class<T> clazz, Object patch) {
+		if (patch.getClass().isAssignableFrom(clazz)) {
+			return (T) patch;
+		}
+		return null;
 	}
 
 }
